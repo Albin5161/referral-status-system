@@ -41,7 +41,7 @@ export function ComposePage() {
     if (type === 'message') {
       if (!message.trim()) return
       sendMessage(message)
-      navigate('/thread')
+      navigate('/messaging')
       return
     }
     if (!jobAttached) {
@@ -66,7 +66,7 @@ export function ComposePage() {
         },
         { simulateFailure },
       )
-      navigate('/thread') // card shows immediately at Pending (PRD §5.8)
+      navigate('/messaging') // card shows immediately at Pending (PRD §5.8)
     } catch {
       setStep('error')
     }
@@ -79,7 +79,7 @@ export function ComposePage() {
         <div className="flex items-center gap-2 border-b border-line px-4 py-3">
           <button
             onClick={() =>
-              step === 'compose' ? navigate('/thread') : setStep('compose')
+              step === 'compose' ? navigate('/messaging') : setStep('compose')
             }
             aria-label="Back"
             className="rounded-full p-1 text-ink-muted hover:bg-black/5 hover:text-ink"

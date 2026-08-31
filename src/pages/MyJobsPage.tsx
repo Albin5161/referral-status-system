@@ -28,7 +28,7 @@ export function MyJobsPage() {
               You haven&apos;t sent any referral requests yet.
             </p>
             <Link
-              to="/thread"
+              to="/messaging"
               className="mt-3 inline-block text-sm font-semibold text-accent"
             >
               Go to messaging to start one

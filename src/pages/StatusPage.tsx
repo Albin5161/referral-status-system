@@ -27,7 +27,7 @@ export function StatusPage() {
       <div className="mx-auto max-w-3xl px-4 py-10 text-center">
         <p className="text-sm text-ink-muted">This referral request was not found.</p>
         <Link
-          to="/thread"
+          to="/messaging"
           className="mt-3 inline-block text-sm font-semibold text-accent"
         >
           Back to messaging
@@ -45,7 +45,7 @@ export function StatusPage() {
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-line px-4 py-3">
           <button
-            onClick={() => navigate('/thread')}
+            onClick={() => navigate('/messaging')}
             aria-label="Back"
             className="rounded-full p-1 text-ink-muted hover:bg-black/5 hover:text-ink"
           >
