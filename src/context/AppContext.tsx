@@ -48,7 +48,7 @@ interface AppState {
   dismissNotification: (id: string) => void
   markNotificationRead: (id: string) => void
 
-  sendMessage: (body: string) => void
+  sendMessage: (peerId: string, body: string) => void
 
   // Pessimistic creation — resolves only after a simulated round-trip (PRD §5.7).
   createReferralRequest: (
@@ -77,7 +77,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     load<StatusUpdate[]>('statusUpdates', []),
   )
   const [threadMessages, setThreadMessages] = useState<ThreadMessage[]>(() =>
-    load<ThreadMessage[]>('threadMessages', SEED_MESSAGES),
+    // Migrate any pre-existing messages saved before peerId existed → scope them
+    // to the canonical Alex Johnson conversation.
+    load<ThreadMessage[]>('threadMessages', SEED_MESSAGES).map((m) => ({
+      ...m,
+      peerId: m.peerId ?? RECIPIENT.id,
+    })),
   )
   const [notifications, setNotifications] = useState<AppNotification[]>(() =>
     load<AppNotification[]>('notifications', []),
@@ -92,16 +97,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setRole = useCallback((r: Role) => setRoleState(r), [])
 
   const sendMessage = useCallback(
-    (body: string) => {
+    (peerId: string, body: string) => {
       const trimmed = body.trim()
       if (!trimmed) return
-      // senderId is always a member id; the active role maps to a member.
-      const senderId = role === 'requester' ? ME.id : RECIPIENT.id
+      // In a 1:1 conversation between ME and the peer, the requester speaks as ME
+      // and the referrer speaks as the peer.
+      const senderId = role === 'requester' ? ME.id : peerId
       setThreadMessages((prev) => [
         ...prev,
         {
           id: uid('m'),
           senderId,
+          peerId,
           body: trimmed,
           sentAt: new Date().toISOString(),
         },
@@ -166,7 +173,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Raise a requester-facing notification only for referrer-posted updates.
       // The requester's own Withdraw and the system's initial Pending do not notify.
-      if (changedBy === RECIPIENT.name) {
+      if (changedBy !== 'system' && changedBy !== ME.name) {
         setNotifications((prev) => [
           ...prev,
           {

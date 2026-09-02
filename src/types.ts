@@ -3,6 +3,19 @@
 export interface LinkedInMember {
   id: string
   name: string
+  // Optional profile fields used by the connection picker / Job Tracker (PRD §4b).
+  headline?: string
+  degree?: string // e.g. "1st", "2nd"
+}
+
+// A row in the requester's Job Tracker (PRD §4b). Not part of the object-model
+// contract (§2) — it is presentation context for Entry Point 2.
+export interface TrackedJob {
+  id: string
+  title: string
+  company: string
+  trackStatus: 'Saved' | 'Applied' | 'In Progress'
+  connectionIds: string[] // members the requester is connected to at this company
 }
 
 export type ReferralStatus =
@@ -38,6 +51,7 @@ export interface ReferralRequest {
 export interface ThreadMessage {
   id: string
   senderId: string
+  peerId: string // the OTHER member in this 1:1 conversation (scopes the thread)
   body: string
   sentAt: string
 }

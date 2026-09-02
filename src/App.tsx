@@ -5,6 +5,7 @@ import { Footer } from './components/Footer'
 import { StatusNotification } from './components/StatusNotification'
 import { HomePage } from './pages/HomePage'
 import { MessagingPage } from './pages/MessagingPage'
+import { JobTrackerPage } from './pages/JobTrackerPage'
 import { ComposePage } from './pages/ComposePage'
 import { StatusPage } from './pages/StatusPage'
 import { MyJobsPage } from './pages/MyJobsPage'
@@ -24,6 +25,14 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/messaging" element={<MessagingPage />} />
+          <Route
+            path="/jobs"
+            element={
+              <RequesterOnly>
+                <JobTrackerPage />
+              </RequesterOnly>
+            }
+          />
           {/* Back-compat: the referral thread used to live at /thread */}
           <Route path="/thread" element={<Navigate to="/messaging" replace />} />
           <Route

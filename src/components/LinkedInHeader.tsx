@@ -53,7 +53,16 @@ export function LinkedInHeader() {
         <nav className="ml-auto flex items-stretch">
           <NavItem to="/" active={isActive('/')} icon={<Home size={20} />} label="Home" />
           <NavStatic icon={<Users size={20} />} label="My Network" />
-          <NavStatic icon={<Briefcase size={20} />} label="Jobs" />
+          {role === 'requester' ? (
+            <NavItem
+              to="/jobs"
+              active={isActive('/jobs')}
+              icon={<Briefcase size={20} />}
+              label="Jobs"
+            />
+          ) : (
+            <NavStatic icon={<Briefcase size={20} />} label="Jobs" />
+          )}
           <NavItem
             to="/messaging"
             active={isActive('/messaging')}

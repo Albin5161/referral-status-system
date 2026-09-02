@@ -1,31 +1,41 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { MoreHorizontal, PenSquare, Search } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { PenSquare, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { ME, RECIPIENT } from '../sampleData'
+import { CONNECTIONS, ME, RECIPIENT } from '../sampleData'
+import { deriveCurrentStatus } from '../stateMachine'
 import { Avatar } from '../components/Avatar'
 import { ThreadView } from '../components/ThreadView'
 import { formatTimestamp } from '../format'
 
-// Placeholder conversations — fictional, inert. Only the Alex Johnson thread is
-// wired to the referral flow. Selecting a placeholder shows a muted notice.
-const PLACEHOLDER_CONVOS = [
-  { id: 'c-priya', name: 'Priya Menon', preview: 'Thanks for connecting!', when: 'Aug 28' },
-  { id: 'c-daniel', name: 'Daniel Okafor', preview: 'Let’s catch up next week.', when: 'Aug 21' },
-  { id: 'c-sara', name: 'Sara Lindqvist', preview: 'Great, talk soon.', when: 'Aug 14' },
-]
-
-const ALEX_CONVO_ID = 'c-alex'
-
+// Messaging inbox — LinkedIn-style two-pane layout. The conversation list is the
+// requester's connections; selecting one opens that 1:1 thread. The ?c= param
+// selects the active conversation so other flows (Job Tracker → Refer) can deep
+// link straight to the right thread.
 export function MessagingPage() {
-  const { role, threadMessages } = useApp()
+  const { role, threadMessages, referralRequests, statusUpdates } = useApp()
   const navigate = useNavigate()
-  const [selected, setSelected] = useState<string>(ALEX_CONVO_ID)
+  const [params, setParams] = useSearchParams()
 
-  const lastMsg = threadMessages.at(-1)
-  const alexPreview = lastMsg
-    ? `${lastMsg.senderId === ME.id ? 'You: ' : ''}${lastMsg.body}`
-    : 'Say hello'
+  const rows = CONNECTIONS.map((c) => {
+    const msgs = threadMessages.filter((m) => m.peerId === c.id)
+    const reqs = referralRequests.filter((r) => r.recipientId === c.id)
+    const lastMsg = msgs.at(-1)
+    const lastReq = reqs.at(-1)
+    const lastAt = Math.max(
+      lastMsg ? new Date(lastMsg.sentAt).getTime() : 0,
+      lastReq ? new Date(lastReq.createdAt).getTime() : 0,
+    )
+    let preview = 'Start the conversation'
+    if (lastMsg && (!lastReq || new Date(lastMsg.sentAt) >= new Date(lastReq.createdAt))) {
+      preview = `${lastMsg.senderId === ME.id ? 'You: ' : ''}${lastMsg.body}`
+    } else if (lastReq) {
+      preview = `Referral Request · ${deriveCurrentStatus(lastReq, statusUpdates)}`
+    }
+    return { member: c, preview, lastAt }
+  }).sort((a, b) => b.lastAt - a.lastAt)
+
+  const selected = params.get('c') ?? RECIPIENT.id
+  const select = (id: string) => setParams({ c: id }, { replace: true })
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
@@ -43,8 +53,9 @@ export function MessagingPage() {
             </div>
             {role === 'requester' && (
               <button
-                onClick={() => navigate('/compose')}
-                aria-label="Compose new message"
+                onClick={() => navigate('/jobs')}
+                aria-label="New referral from Job Tracker"
+                title="Ask for a referral from your Job Tracker"
                 className="rounded-full p-1.5 text-ink-muted hover:bg-black/5 hover:text-ink"
               >
                 <PenSquare size={18} />
@@ -53,37 +64,22 @@ export function MessagingPage() {
           </div>
 
           <ul className="min-h-0 flex-1 overflow-y-auto">
-            <ConvoRow
-              name={RECIPIENT.name}
-              preview={alexPreview}
-              when={lastMsg ? formatTimestamp(lastMsg.sentAt) : ''}
-              active={selected === ALEX_CONVO_ID}
-              onClick={() => setSelected(ALEX_CONVO_ID)}
-            />
-            {PLACEHOLDER_CONVOS.map((c) => (
+            {rows.map(({ member, preview, lastAt }) => (
               <ConvoRow
-                key={c.id}
-                name={c.name}
-                preview={c.preview}
-                when={c.when}
-                active={selected === c.id}
-                onClick={() => setSelected(c.id)}
+                key={member.id}
+                name={member.name}
+                preview={preview}
+                when={lastAt ? formatTimestamp(new Date(lastAt).toISOString()) : ''}
+                active={selected === member.id}
+                onClick={() => select(member.id)}
               />
             ))}
           </ul>
         </div>
 
-        {/* Right pane */}
+        {/* Right pane — the selected conversation */}
         <div className="min-h-0">
-          {selected === ALEX_CONVO_ID ? (
-            <ThreadView />
-          ) : (
-            <PlaceholderPane
-              name={
-                PLACEHOLDER_CONVOS.find((c) => c.id === selected)?.name ?? ''
-              }
-            />
-          )}
+          <ThreadView peerId={selected} />
         </div>
       </div>
     </div>
@@ -121,24 +117,5 @@ function ConvoRow({
         </div>
       </button>
     </li>
-  )
-}
-
-function PlaceholderPane({ name }: { name: string }) {
-  return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b border-line px-4 py-3">
-        <Avatar name={name} size={40} />
-        <p className="text-[15px] font-semibold text-ink">{name}</p>
-        <MoreHorizontal size={18} className="ml-auto text-ink-muted" />
-      </div>
-      <div className="flex flex-1 items-center justify-center px-6 text-center">
-        <p className="max-w-xs text-sm text-ink-muted">
-          This is a placeholder conversation and is not part of the prototype.
-          Select <span className="font-semibold text-ink">Alex Johnson</span> to try
-          the Referral Status flow.
-        </p>
-      </div>
-    </div>
   )
 }

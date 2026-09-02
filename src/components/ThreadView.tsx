@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Image, Paperclip, Plus, Send, Smile } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { ME, RECIPIENT } from '../sampleData'
+import { ME, RECIPIENT, memberById } from '../sampleData'
 import { Avatar } from './Avatar'
 import { ReferralRequestCard } from './ReferralRequestCard'
 import { formatTimestamp } from '../format'
@@ -11,34 +11,36 @@ type TimelineItem =
   | { kind: 'message'; id: string; senderId: string; body: string; at: string }
   | { kind: 'request'; id: string; at: string }
 
-// The referral conversation itself (with Alex Johnson). Rendered inside the
-// Messaging right pane. Fills its container rather than owning page chrome.
-export function ThreadView() {
+// One 1:1 conversation, scoped by peerId. Rendered inside the Messaging right
+// pane. Referral requests are filtered to those addressed to this peer.
+export function ThreadView({ peerId }: { peerId: string }) {
   const { role, threadMessages, referralRequests, sendMessage } = useApp()
   const navigate = useNavigate()
   const [draft, setDraft] = useState('')
 
-  const me = role === 'requester' ? ME : RECIPIENT
-  const other = role === 'requester' ? RECIPIENT : ME
+  const peer = memberById(peerId)
+  // The requester speaks as ME; the referrer speaks as the peer.
+  const meId = role === 'requester' ? ME.id : peerId
+  const other = role === 'requester' ? peer : ME
 
   const items: TimelineItem[] = [
-    ...threadMessages.map((m) => ({
-      kind: 'message' as const,
-      id: m.id,
-      senderId: m.senderId,
-      body: m.body,
-      at: m.sentAt,
-    })),
-    ...referralRequests.map((r) => ({
-      kind: 'request' as const,
-      id: r.id,
-      at: r.createdAt,
-    })),
+    ...threadMessages
+      .filter((m) => m.peerId === peerId)
+      .map((m) => ({
+        kind: 'message' as const,
+        id: m.id,
+        senderId: m.senderId,
+        body: m.body,
+        at: m.sentAt,
+      })),
+    ...referralRequests
+      .filter((r) => r.recipientId === peerId)
+      .map((r) => ({ kind: 'request' as const, id: r.id, at: r.createdAt })),
   ].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
 
   const submitDraft = () => {
     if (!draft.trim()) return
-    sendMessage(draft)
+    sendMessage(peerId, draft)
     setDraft('')
   }
 
@@ -46,14 +48,17 @@ export function ThreadView() {
     <div className="flex h-full flex-col">
       {/* Conversation header */}
       <div className="flex items-center gap-3 border-b border-line px-4 py-3">
-        <Avatar name={other.name} size={40} />
+        <Avatar name={other?.name ?? ''} size={40} />
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-ink">{other.name}</p>
+          <p className="text-[15px] font-semibold text-ink">{other?.name}</p>
           <p className="text-[12px] text-ink-muted">
-            {other.id === RECIPIENT.id ? '2nd-degree connection' : 'Connection'}
+            {other?.id === ME.id
+              ? 'UX Designer'
+              : other?.headline || other?.degree || 'Connection'}
           </p>
         </div>
-        {role === 'requester' && (
+        {/* Entry Point 1 (canonical): compose from the Alex Johnson thread. */}
+        {role === 'requester' && peerId === RECIPIENT.id && (
           <button
             onClick={() => navigate('/compose')}
             className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-accent-hover"
@@ -66,6 +71,11 @@ export function ThreadView() {
 
       {/* Timeline */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {items.length === 0 && (
+          <p className="py-8 text-center text-[13px] text-ink-faint">
+            No messages yet.
+          </p>
+        )}
         {items.map((item) => {
           if (item.kind === 'request') {
             return (
@@ -75,8 +85,8 @@ export function ThreadView() {
               />
             )
           }
-          const mine = item.senderId === me.id
-          const senderName = item.senderId === ME.id ? ME.name : RECIPIENT.name
+          const mine = item.senderId === meId
+          const senderName = memberById(item.senderId)?.name ?? ''
           return (
             <div
               key={item.id}
