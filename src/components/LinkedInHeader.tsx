@@ -108,7 +108,7 @@ function NavItem({
   return (
     <Link
       to={to}
-      className={`relative flex w-[72px] flex-col items-center justify-center border-b-2 pt-1 text-[11px] transition-colors ${
+      className={`relative flex min-w-[72px] flex-col items-center justify-center border-b-2 px-2 pt-1 text-[11px] transition-colors ${
         active
           ? 'border-ink text-ink'
           : 'border-transparent text-ink-muted hover:text-ink'
@@ -118,7 +118,7 @@ function NavItem({
         {icon}
         {badge ? <Badge count={badge} /> : null}
       </span>
-      <span className="mt-0.5">{label}</span>
+      <span className="mt-0.5 whitespace-nowrap">{label}</span>
     </Link>
   )
 }
@@ -137,14 +137,14 @@ function NavStatic({
 }) {
   return (
     <div
-      className="relative hidden w-[72px] cursor-default flex-col items-center justify-center border-b-2 border-transparent pt-1 text-[11px] text-ink-muted sm:flex"
+      className="relative hidden min-w-[72px] cursor-default flex-col items-center justify-center border-b-2 border-transparent px-2 pt-1 text-[11px] text-ink-muted sm:flex"
       aria-hidden
     >
       <span className="relative">
         {icon}
         {badge ? <Badge count={badge} /> : null}
       </span>
-      <span className="mt-0.5 flex items-center gap-0.5">
+      <span className="mt-0.5 flex items-center gap-0.5 whitespace-nowrap">
         {label}
         {caret && <ChevronDown size={12} />}
       </span>
