@@ -13,8 +13,8 @@ export function ReferralRequestCard({ request }: { request: ReferralRequest }) {
   const status = deriveCurrentStatus(request, statusUpdates)
 
   return (
-    <div className="rounded-card border border-line bg-surface shadow-card">
-      <div className="flex items-start gap-3 p-3">
+    <div className="animate-pop-in overflow-hidden rounded-card border border-line bg-surface shadow-card transition-shadow duration-200 hover:shadow-cardHover">
+      <div className="flex items-start gap-3 p-3.5">
         <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded bg-accent/10 text-accent">
           <FileText size={18} />
         </span>
@@ -36,10 +36,13 @@ export function ReferralRequestCard({ request }: { request: ReferralRequest }) {
       </div>
       <Link
         to={`/status/${request.id}`}
-        className="flex items-center justify-between border-t border-line px-3 py-2.5 text-sm font-semibold text-accent hover:bg-surface-hover"
+        className="group flex items-center justify-between border-t border-line px-3.5 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent/5"
       >
         View Referral Status
-        <ChevronRight size={16} />
+        <ChevronRight
+          size={16}
+          className="transition-transform duration-200 group-hover:translate-x-0.5"
+        />
       </Link>
     </div>
   )

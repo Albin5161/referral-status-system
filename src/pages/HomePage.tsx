@@ -23,7 +23,7 @@ export function HomePage() {
   const me = role === 'requester' ? ME : RECIPIENT
 
   return (
-    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[225px_minmax(0,1fr)_300px]">
+    <div className="animate-fade-in mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[225px_minmax(0,1fr)_300px]">
       {/* Left rail — profile card */}
       <aside className="hidden lg:block">
         <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">

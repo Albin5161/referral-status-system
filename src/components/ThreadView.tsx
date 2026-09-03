@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Image, Paperclip, Plus, Send, Smile } from 'lucide-react'
+import { Image, MessageSquare, Paperclip, Plus, Send, Smile } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { ME, RECIPIENT, memberById } from '../sampleData'
 import { Avatar } from './Avatar'
@@ -72,9 +72,17 @@ export function ThreadView({ peerId }: { peerId: string }) {
       {/* Timeline */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {items.length === 0 && (
-          <p className="py-8 text-center text-[13px] text-ink-faint">
-            No messages yet.
-          </p>
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-black/[0.04] text-ink-faint">
+              <MessageSquare size={22} />
+            </span>
+            <p className="text-sm font-medium text-ink-muted">
+              No messages yet
+            </p>
+            <p className="max-w-[220px] text-[12px] text-ink-faint">
+              Say hello to {other?.name?.split(' ')[0]} to start the conversation.
+            </p>
+          </div>
         )}
         {items.map((item) => {
           if (item.kind === 'request') {

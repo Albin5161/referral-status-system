@@ -38,7 +38,7 @@ export function MessagingPage() {
   const select = (id: string) => setParams({ c: id }, { replace: true })
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
+    <div className="animate-fade-in mx-auto max-w-6xl px-4 py-6">
       <div className="grid h-[calc(100vh-140px)] min-h-[520px] grid-cols-1 overflow-hidden rounded-card border border-line bg-surface shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         {/* Conversation list */}
         <div className="flex min-h-0 flex-col border-r border-line">
@@ -103,8 +103,10 @@ function ConvoRow({
     <li>
       <button
         onClick={onClick}
-        className={`flex w-full items-start gap-3 border-b border-line px-3 py-3 text-left transition-colors ${
-          active ? 'bg-[#eef3f8]' : 'hover:bg-surface-hover'
+        className={`flex w-full items-start gap-3 border-b border-line border-l-2 px-3 py-3 text-left transition-colors ${
+          active
+            ? 'border-l-accent bg-[#eef3f8]'
+            : 'border-l-transparent hover:bg-surface-hover'
         }`}
       >
         <Avatar name={name} size={48} />

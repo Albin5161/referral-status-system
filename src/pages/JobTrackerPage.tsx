@@ -13,7 +13,7 @@ export function JobTrackerPage() {
   const [pickerJob, setPickerJob] = useState<TrackedJob | null>(null)
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="animate-fade-in mx-auto max-w-3xl px-4 py-6">
       <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
         <div className="border-b border-line px-4 py-3">
           <h1 className="text-[16px] font-semibold text-ink">Job Tracker</h1>
@@ -43,7 +43,7 @@ function JobRow({ job, onAsk }: { job: TrackedJob; onAsk: () => void }) {
   const hasConnections = connections.length > 0
 
   return (
-    <li className="flex items-center gap-3 px-4 py-3">
+    <li className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-hover">
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded bg-black/[0.04] text-ink-muted">
         <Briefcase size={20} />
       </span>
@@ -113,11 +113,11 @@ function ConnectionPicker({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+      className="animate-fade-in fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm overflow-hidden rounded-card bg-surface shadow-pop"
+        className="animate-pop-in w-full max-w-sm overflow-hidden rounded-card bg-surface shadow-pop"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-line px-4 py-3">

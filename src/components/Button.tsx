@@ -17,7 +17,7 @@ export function Button({
   ...rest
 }: Props) {
   const base =
-    'inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold px-4 py-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:cursor-not-allowed'
+    'inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold px-4 py-1.5 transition-[background-color,color,transform] duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100'
 
   const variants: Record<Variant, string> = {
     primary: disabled

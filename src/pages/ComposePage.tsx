@@ -93,7 +93,7 @@ export function ComposePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-4">
+    <div className="animate-fade-in mx-auto max-w-3xl px-4 py-4">
       <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-line px-4 py-3">

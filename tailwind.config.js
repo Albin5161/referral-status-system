@@ -28,7 +28,27 @@ export default {
       },
       boxShadow: {
         card: '0 0 0 1px rgba(0,0,0,0.08), 0 2px 3px rgba(0,0,0,0.06)',
-        pop: '0 4px 12px rgba(0,0,0,0.15)',
+        cardHover: '0 0 0 1px rgba(0,0,0,0.10), 0 6px 16px rgba(0,0,0,0.10)',
+        pop: '0 8px 28px rgba(0,0,0,0.18)',
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        slideUp: {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        popIn: {
+          from: { opacity: '0', transform: 'translateY(6px) scale(0.98)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out both',
+        'slide-up': 'slideUp 0.34s cubic-bezier(0.2,0.7,0.3,1) both',
+        'pop-in': 'popIn 0.3s cubic-bezier(0.2,0.8,0.3,1) both',
       },
       fontFamily: {
         sans: [
