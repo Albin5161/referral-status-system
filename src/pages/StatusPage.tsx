@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Briefcase } from 'lucide-react'
+import { ArrowLeft, Briefcase, Check } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import {
   allowedTransitions,
@@ -19,6 +19,23 @@ export function StatusPage() {
   const { id } = useParams<{ id: string }>()
   const { role, referralRequests, statusUpdates } = useApp()
   const navigate = useNavigate()
+
+  // Brief, auto-dismissing acknowledgment after a status change (FIX 2 —
+  // visibility of system status). Lifted here so it survives the action's own
+  // state change (Withdraw unmounts the requester action once terminal).
+  const [ack, setAck] = useState<string | null>(null)
+  const ackTimer = useRef<number | null>(null)
+  const showAck = useCallback((message: string) => {
+    setAck(message)
+    if (ackTimer.current) window.clearTimeout(ackTimer.current)
+    ackTimer.current = window.setTimeout(() => setAck(null), 2500)
+  }, [])
+  useEffect(
+    () => () => {
+      if (ackTimer.current) window.clearTimeout(ackTimer.current)
+    },
+    [],
+  )
 
   const request = referralRequests.find((r) => r.id === id)
 
@@ -93,9 +110,28 @@ export function StatusPage() {
 
           {/* Role-specific actions */}
           {role === 'requester' ? (
-            <RequesterActions requestId={request.id} status={status} />
+            <RequesterActions
+              requestId={request.id}
+              status={status}
+              onDone={showAck}
+            />
           ) : (
-            <ReferrerActions requestId={request.id} status={status} />
+            <ReferrerActions
+              requestId={request.id}
+              status={status}
+              onDone={showAck}
+            />
+          )}
+
+          {ack && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="animate-fade-in mt-3 inline-flex items-center gap-1.5 rounded-full bg-black/[0.04] px-3 py-1.5 text-[13px] text-ink-muted"
+            >
+              <Check size={14} className="text-ink-muted" />
+              {ack}
+            </div>
           )}
         </div>
 
@@ -147,9 +183,11 @@ export function StatusPage() {
 function RequesterActions({
   requestId,
   status,
+  onDone,
 }: {
   requestId: string
   status: ReferralStatus
+  onDone: (message: string) => void
 }) {
   const { postStatusUpdate, members } = useApp()
   const [confirming, setConfirming] = useState(false)
@@ -173,9 +211,10 @@ function RequesterActions({
             </Button>
             <Button
               variant="secondary"
-              onClick={() =>
+              onClick={() => {
                 postStatusUpdate(requestId, 'Withdrawn', members.me.name)
-              }
+                onDone('Request withdrawn')
+              }}
             >
               Withdraw
             </Button>
@@ -190,14 +229,19 @@ function RequesterActions({
 function ReferrerActions({
   requestId,
   status,
+  onDone,
 }: {
   requestId: string
   status: ReferralStatus
+  onDone: (message: string) => void
 }) {
   const { postStatusUpdate } = useApp()
   const options = allowedTransitions(status)
   const [selected, setSelected] = useState<ReferralStatus | ''>('')
   const [note, setNote] = useState('')
+  // FIX 1: terminal statuses (Referred / Unable to Refer) are irreversible, so
+  // they get an inline confirm before posting — matching Withdraw / Send.
+  const [confirmingTerminal, setConfirmingTerminal] = useState(false)
 
   // Empty transition array → no status-change action renders at all (PRD §3).
   if (options.length === 0) {
@@ -211,11 +255,28 @@ function ReferrerActions({
     )
   }
 
-  const submit = () => {
+  const post = () => {
     if (!selected) return
     postStatusUpdate(requestId, selected, RECIPIENT.name, note)
+    onDone('Status updated')
     setSelected('')
     setNote('')
+    setConfirmingTerminal(false)
+  }
+
+  const handlePost = () => {
+    if (!selected) return
+    // Terminal selections need a confirmation step; reversible ones don't.
+    if (isTerminal(selected) && !confirmingTerminal) {
+      setConfirmingTerminal(true)
+      return
+    }
+    post()
+  }
+
+  const selectOption = (opt: ReferralStatus) => {
+    setSelected(opt)
+    setConfirmingTerminal(false)
   }
 
   return (
@@ -225,7 +286,7 @@ function ReferrerActions({
         {options.map((opt) => (
           <button
             key={opt}
-            onClick={() => setSelected(opt)}
+            onClick={() => selectOption(opt)}
             aria-pressed={selected === opt}
             className={`rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors ${
               selected === opt
@@ -246,11 +307,25 @@ function ReferrerActions({
         className="mt-3 w-full resize-none rounded-card border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
       />
 
-      <div className="mt-2 flex justify-end">
-        <Button onClick={submit} disabled={!selected}>
-          Post update
-        </Button>
-      </div>
+      {confirmingTerminal ? (
+        <div className="animate-fade-in mt-3 flex flex-wrap items-center gap-3 rounded-card border border-line bg-surface-hover px-3 py-2.5">
+          <span className="text-[13px] text-ink">
+            This status can&apos;t be changed once posted. Post {selected}?
+          </span>
+          <div className="ml-auto flex gap-2">
+            <Button variant="ghost" onClick={() => setConfirmingTerminal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={post}>Confirm</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-2 flex justify-end">
+          <Button onClick={handlePost} disabled={!selected}>
+            Post update
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
