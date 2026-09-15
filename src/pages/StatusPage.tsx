@@ -17,7 +17,7 @@ import { displayActor, formatDate, formatTimestamp } from '../format'
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>()
-  const { role, referralRequests, statusUpdates } = useApp()
+  const { role, referralRequests, statusUpdates, markRequestsSeen } = useApp()
   const navigate = useNavigate()
 
   // Brief, auto-dismissing acknowledgment after a status change (FIX 2 —
@@ -38,6 +38,11 @@ export function StatusPage() {
   )
 
   const request = referralRequests.find((r) => r.id === id)
+
+  // Referrer opening a request's detail marks it seen (clears the Messaging badge).
+  useEffect(() => {
+    if (role === 'referrer' && request) markRequestsSeen([request.id])
+  }, [role, request, markRequestsSeen])
 
   if (!request) {
     return (

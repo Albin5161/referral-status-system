@@ -19,12 +19,18 @@ import { RoleSwitcher } from './RoleSwitcher'
 // modeled on the real product; the brand mark is a NON-trademark glyph plus the
 // "LinkedIn Concept" text identity (PRD §0 — no LinkedIn logo/wordmark asset).
 export function LinkedInHeader() {
-  const { role, notifications } = useApp()
+  const { role, notifications, referralRequests, seenRequestIds } = useApp()
   const { pathname } = useLocation()
   const me = role === 'requester' ? ME : RECIPIENT
 
+  // Requester: unread status-update notifications. Referrer: incoming referral
+  // requests addressed to them that they haven't opened yet.
   const messagingUnread =
-    role === 'requester' ? notifications.filter((n) => !n.read).length : 0
+    role === 'requester'
+      ? notifications.filter((n) => !n.read).length
+      : referralRequests.filter(
+          (r) => r.recipientId === RECIPIENT.id && !seenRequestIds.includes(r.id),
+        ).length
 
   const isActive = (to: string) =>
     to === '/' ? pathname === '/' : pathname.startsWith(to)

@@ -48,6 +48,11 @@ interface AppState {
   dismissNotification: (id: string) => void
   markNotificationRead: (id: string) => void
 
+  // Referral requests the referrer has already opened. Drives the referrer's
+  // Messaging badge (incoming requests they haven't seen yet).
+  seenRequestIds: string[]
+  markRequestsSeen: (ids: string[]) => void
+
   sendMessage: (peerId: string, body: string) => void
 
   // Pessimistic creation — resolves only after a simulated round-trip (PRD §5.7).
@@ -87,12 +92,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<AppNotification[]>(() =>
     load<AppNotification[]>('notifications', []),
   )
+  const [seenRequestIds, setSeenRequestIds] = useState<string[]>(() =>
+    load<string[]>('seenRequestIds', []),
+  )
 
   useEffect(() => save('role', role), [role])
   useEffect(() => save('referralRequests', referralRequests), [referralRequests])
   useEffect(() => save('statusUpdates', statusUpdates), [statusUpdates])
   useEffect(() => save('threadMessages', threadMessages), [threadMessages])
   useEffect(() => save('notifications', notifications), [notifications])
+  useEffect(() => save('seenRequestIds', seenRequestIds), [seenRequestIds])
 
   const setRole = useCallback((r: Role) => setRoleState(r), [])
 
@@ -199,11 +208,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
+  const markRequestsSeen = useCallback((ids: string[]) => {
+    setSeenRequestIds((prev) => {
+      const toAdd = ids.filter((id) => !prev.includes(id))
+      return toAdd.length ? [...prev, ...toAdd] : prev
+    })
+  }, [])
+
   const resetPrototype = useCallback(() => {
     setReferralRequests([])
     setStatusUpdates([])
     setThreadMessages(SEED_MESSAGES)
     setNotifications([])
+    setSeenRequestIds([])
     setRoleState('requester')
   }, [])
 
@@ -218,6 +235,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       notifications,
       dismissNotification,
       markNotificationRead,
+      seenRequestIds,
+      markRequestsSeen,
       sendMessage,
       createReferralRequest,
       postStatusUpdate,
@@ -232,6 +251,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       notifications,
       dismissNotification,
       markNotificationRead,
+      seenRequestIds,
+      markRequestsSeen,
       sendMessage,
       createReferralRequest,
       postStatusUpdate,

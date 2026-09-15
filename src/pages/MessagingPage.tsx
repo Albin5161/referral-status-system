@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PenSquare, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
@@ -12,7 +13,8 @@ import { formatTimestamp } from '../format'
 // selects the active conversation so other flows (Job Tracker → Refer) can deep
 // link straight to the right thread.
 export function MessagingPage() {
-  const { role, threadMessages, referralRequests, statusUpdates } = useApp()
+  const { role, threadMessages, referralRequests, statusUpdates, markRequestsSeen } =
+    useApp()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
 
@@ -36,6 +38,16 @@ export function MessagingPage() {
 
   const selected = params.get('c') ?? RECIPIENT.id
   const select = (id: string) => setParams({ c: id }, { replace: true })
+
+  // As the referrer, opening a conversation marks its incoming referral requests
+  // as seen — which clears the Messaging badge (inbox behaviour).
+  useEffect(() => {
+    if (role !== 'referrer') return
+    const ids = referralRequests
+      .filter((r) => r.recipientId === selected)
+      .map((r) => r.id)
+    markRequestsSeen(ids)
+  }, [role, selected, referralRequests, markRequestsSeen])
 
   return (
     <div className="animate-fade-in mx-auto max-w-6xl px-4 py-6">
