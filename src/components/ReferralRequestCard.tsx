@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ChevronRight, FileText } from 'lucide-react'
+import { ChevronRight, FileText, Paperclip } from 'lucide-react'
 import type { ReferralRequest } from '../types'
 import { useApp } from '../context/AppContext'
 import { deriveCurrentStatus } from '../stateMachine'
@@ -32,6 +32,12 @@ export function ReferralRequestCard({ request }: { request: ReferralRequest }) {
             <span className="text-[13px] text-ink-muted">Status</span>
             <StatusBadge status={status} size="sm" />
           </div>
+          {request.resumeName && (
+            <div className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border border-line bg-black/[0.02] px-2.5 py-1 text-[12px] text-ink-muted">
+              <Paperclip size={12} className="shrink-0" />
+              <span className="truncate">{request.resumeName}</span>
+            </div>
+          )}
         </div>
       </div>
       <Link

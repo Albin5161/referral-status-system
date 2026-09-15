@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Briefcase, Check } from 'lucide-react'
+import { ArrowLeft, Briefcase, Check, Paperclip } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import {
   allowedTransitions,
@@ -88,6 +88,12 @@ export function StatusPage() {
             <p className="text-[13px] text-ink-muted">
               {request.companySnapshot} · Requested {formatDate(request.createdAt)}
             </p>
+            {request.resumeName && (
+              <div className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border border-line bg-black/[0.02] px-2.5 py-1 text-[12px] text-ink-muted">
+                <Paperclip size={12} className="shrink-0" />
+                <span className="truncate">{request.resumeName}</span>
+              </div>
+            )}
           </div>
         </div>
 

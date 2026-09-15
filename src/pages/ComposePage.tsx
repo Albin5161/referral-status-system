@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import {
+  DEFAULT_RESUME,
   JOB,
   RECIPIENT,
   defaultReferralMessage,
@@ -43,6 +44,7 @@ export function ComposePage() {
   const [type, setType] = useState<MessageType>('referral')
   const [message, setMessage] = useState(defaultReferralMessage(activeJob))
   const [jobAttached, setJobAttached] = useState(lean) // job known from context in lean mode
+  const [resumeAttached, setResumeAttached] = useState(false) // optional resume (mock)
   const [step, setStep] = useState<Step>('compose')
   const [validationError, setValidationError] = useState<string | null>(null)
   const [simulateFailure, setSimulateFailure] = useState(false)
@@ -83,6 +85,7 @@ export function ComposePage() {
           jobTitleSnapshot: activeJob.title,
           companySnapshot: activeJob.company,
           initialMessage: message.trim(),
+          resumeName: resumeAttached ? DEFAULT_RESUME : undefined,
         },
         { simulateFailure },
       )
@@ -232,6 +235,43 @@ export function ComposePage() {
               </div>
             )}
 
+            {/* Optional resume attachment (mock — no real upload) */}
+            {(lean || type === 'referral') && (
+              <div>
+                <p className="mb-1.5 text-[13px] font-medium text-ink-muted">
+                  Resume <span className="text-ink-faint">(optional)</span>
+                </p>
+                {resumeAttached ? (
+                  <div className="flex items-center gap-3 rounded-card border border-line bg-surface-hover px-3 py-2.5">
+                    <span className="grid h-9 w-9 place-items-center rounded bg-accent/10 text-accent">
+                      <FileText size={18} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {DEFAULT_RESUME}
+                      </p>
+                      <p className="truncate text-[13px] text-ink-muted">PDF</p>
+                    </div>
+                    <button
+                      onClick={() => setResumeAttached(false)}
+                      aria-label="Remove resume"
+                      className="rounded-full p-1 text-ink-faint hover:bg-black/5 hover:text-ink"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setResumeAttached(true)}
+                    className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover"
+                  >
+                    <Paperclip size={16} />
+                    Attach resume
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end pt-1">
               <Button
                 onClick={handleContinue}
@@ -255,6 +295,10 @@ export function ComposePage() {
                 value={`${activeJob.title} · ${activeJob.company}`}
               />
               <Row label="Message type" value="Referral Request" />
+              <Row
+                label="Resume"
+                value={resumeAttached ? DEFAULT_RESUME : 'Not attached'}
+              />
             </dl>
             <div className="rounded-card border border-line bg-surface-hover px-3 py-2.5">
               <p className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
@@ -262,16 +306,6 @@ export function ComposePage() {
               </p>
               <p className="mt-1 text-sm text-ink">{message}</p>
             </div>
-
-            {/* Demo-only failure toggle (PRD §6 optional failure path) */}
-            <label className="flex items-center gap-2 text-[12px] text-ink-faint">
-              <input
-                type="checkbox"
-                checked={simulateFailure}
-                onChange={(e) => setSimulateFailure(e.target.checked)}
-              />
-              Simulate a creation failure (demo control)
-            </label>
 
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="ghost" onClick={() => setStep('compose')}>

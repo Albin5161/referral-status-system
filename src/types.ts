@@ -44,6 +44,7 @@ export interface ReferralRequest {
   companySnapshot: string // captured at creation, for display resilience
   initialMessage: string
   createdAt: string
+  resumeName?: string // optional attached resume (mock — filename only). Extends PRD §2.
   // currentStatus is NEVER stored — always derive from the latest StatusUpdate (PRD §2)
 }
 

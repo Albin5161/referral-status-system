@@ -32,6 +32,7 @@ interface CreateRequestInput {
   jobTitleSnapshot: string
   companySnapshot: string
   initialMessage: string
+  resumeName?: string
 }
 
 interface AppState {
@@ -144,6 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             jobTitleSnapshot: input.jobTitleSnapshot,
             companySnapshot: input.companySnapshot,
             initialMessage: input.initialMessage,
+            resumeName: input.resumeName,
             createdAt: now,
           }
           // Auto-created initial Pending update, actor "system" (PRD §2).

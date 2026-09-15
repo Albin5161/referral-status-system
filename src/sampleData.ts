@@ -67,6 +67,9 @@ export const JOB = { id: JOBS[0].id, title: JOBS[0].title, company: JOBS[0].comp
 export const DEFAULT_REFERRAL_MESSAGE =
   "Hi! I saw the UX Designer, Google Cloud role at Google and would really appreciate a referral if you think I'd be a good fit."
 
+// Mock resume filename used by the optional resume attachment (no real upload).
+export const DEFAULT_RESUME = 'Albin_Sigi_Resume.pdf'
+
 // The standard default referral message, templated per job (PRD §4b step 4 says the
 // lean composer is prefilled with "the standard default message (§8)"). Produces the
 // exact §8 string for the Google job.
