@@ -21,7 +21,7 @@ export function StatusNotification() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
+    <div className="fixed inset-x-0 bottom-20 z-40 md:bottom-4 flex justify-center px-4">
       <div className="animate-slide-up flex w-full max-w-md items-start gap-3 rounded-card border border-line bg-surface p-3 shadow-pop">
         <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
           <Bell size={16} />

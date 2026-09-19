@@ -7,6 +7,7 @@ import {
   Home,
   MessageSquare,
   Search,
+  SquarePlus,
   Users,
   Waypoints,
 } from 'lucide-react'
@@ -36,70 +37,155 @@ export function LinkedInHeader() {
     to === '/' ? pathname === '/' : pathname.startsWith(to)
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-surface">
-      <div className="mx-auto flex h-[52px] max-w-6xl items-center gap-2 px-4">
-        {/* Brand mark (non-trademark) + search */}
-        <Link to="/" className="flex shrink-0 items-center gap-1" title="LinkedIn Concept · Referral Status">
-          <span className="grid h-8 w-8 place-items-center rounded bg-accent text-white">
-            <Waypoints size={18} />
+    <>
+      <header className="sticky top-0 z-30 border-b border-line bg-surface">
+        {/* Phones: LinkedIn app top bar (avatar, search, messaging) */}
+        <div className="flex h-14 items-center gap-3 px-4 md:hidden">
+          <span className="shrink-0" aria-hidden>
+            <Avatar name={me.name} size={32} />
           </span>
-        </Link>
-        <label className="relative hidden items-center sm:flex">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-2.5 text-ink-muted"
-          />
-          <input
-            placeholder="Search"
-            className="w-56 rounded bg-[#edf3f8] py-1.5 pl-8 pr-3 text-sm outline-none placeholder:text-ink-muted"
-          />
-        </label>
-
-        {/* Primary nav */}
-        <nav className="ml-auto flex items-stretch">
-          <NavItem to="/" active={isActive('/')} icon={<Home size={20} />} label="Home" />
-          <NavStatic icon={<Users size={20} />} label="My Network" />
-          {role === 'requester' ? (
-            <NavItem
-              to="/jobs"
-              active={isActive('/jobs')}
-              icon={<Briefcase size={20} />}
-              label="Jobs"
+          <label className="relative flex min-w-0 flex-1 items-center">
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-3 text-ink-muted"
             />
-          ) : (
-            <NavStatic icon={<Briefcase size={20} />} label="Jobs" />
-          )}
-          <NavItem
+            <input
+              placeholder="Search"
+              aria-label="Search"
+              className="w-full rounded-full border border-black/40 bg-surface py-1.5 pl-9 pr-3 text-[15px] outline-none placeholder:text-ink-muted focus:border-accent"
+            />
+          </label>
+          <Link
             to="/messaging"
-            active={isActive('/messaging')}
-            icon={<MessageSquare size={20} />}
-            label="Messaging"
-            badge={messagingUnread}
-          />
-          <NavStatic icon={<Bell size={20} />} label="Notifications" badge={7} />
-          <NavStatic
-            icon={<Avatar name={me.name} size={24} />}
-            label="Me"
-            caret
-          />
-        </nav>
-
-        {/* Divider + faux business links (decorative) */}
-        <div className="hidden items-stretch border-l border-line pl-1 lg:flex">
-          <NavStatic icon={<Grid3x3 size={20} />} label="For Business" caret />
+            aria-label={messagingUnread ? `Messaging, ${messagingUnread} unread` : 'Messaging'}
+            className="relative shrink-0 rounded-full p-1 text-ink-muted hover:text-ink"
+          >
+            <MessageSquare size={24} />
+            {messagingUnread ? <Badge count={messagingUnread} /> : null}
+          </Link>
         </div>
 
-        {/* Prototype-only role switcher (PRD §4) */}
-        <div className="ml-1 hidden shrink-0 border-l border-line pl-2 sm:block">
+        {/* Phones: prototype-only role switcher, labelled so it never reads as product UI */}
+        <div className="flex items-center justify-between border-t border-line bg-surface-page px-4 py-1 md:hidden">
+          <span className="text-[11px] text-ink-faint">Demo control</span>
           <RoleSwitcher />
         </div>
-      </div>
 
-      {/* Phones: the switcher gets its own row so the nav bar fits the screen */}
-      <div className="flex items-center justify-end border-t border-line px-4 py-1.5 sm:hidden">
-        <RoleSwitcher />
-      </div>
-    </header>
+        {/* Tablet and desktop: LinkedIn web top nav */}
+        <div className="mx-auto hidden h-[52px] max-w-6xl items-center gap-2 px-4 md:flex">
+          {/* Brand mark (non-trademark) + search */}
+          <Link to="/" className="flex shrink-0 items-center gap-1" title="LinkedIn Concept · Referral Status">
+            <span className="grid h-8 w-8 place-items-center rounded bg-accent text-white">
+              <Waypoints size={18} />
+            </span>
+          </Link>
+          <label className="relative hidden items-center lg:flex">
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-2.5 text-ink-muted"
+            />
+            <input
+              placeholder="Search"
+              className="w-56 rounded bg-[#edf3f8] py-1.5 pl-8 pr-3 text-sm outline-none placeholder:text-ink-muted"
+            />
+          </label>
+
+          {/* Primary nav */}
+          <nav className="ml-auto flex items-stretch">
+            <NavItem to="/" active={isActive('/')} icon={<Home size={20} />} label="Home" />
+            <NavStatic icon={<Users size={20} />} label="My Network" />
+            {role === 'requester' ? (
+              <NavItem
+                to="/jobs"
+                active={isActive('/jobs')}
+                icon={<Briefcase size={20} />}
+                label="Jobs"
+              />
+            ) : (
+              <NavStatic icon={<Briefcase size={20} />} label="Jobs" />
+            )}
+            <NavItem
+              to="/messaging"
+              active={isActive('/messaging')}
+              icon={<MessageSquare size={20} />}
+              label="Messaging"
+              badge={messagingUnread}
+            />
+            <NavStatic icon={<Bell size={20} />} label="Notifications" badge={7} />
+            <NavStatic
+              icon={<Avatar name={me.name} size={24} />}
+              label="Me"
+              caret
+            />
+          </nav>
+
+          {/* Divider + faux business links (decorative) */}
+          <div className="hidden items-stretch border-l border-line pl-1 lg:flex">
+            <NavStatic icon={<Grid3x3 size={20} />} label="For Business" caret />
+          </div>
+
+          {/* Prototype-only role switcher (PRD §4) */}
+          <div className="ml-1 shrink-0 border-l border-line pl-2">
+            <RoleSwitcher />
+          </div>
+        </div>
+      </header>
+
+      <MobileTabBar role={role} isActive={isActive} />
+    </>
+  )
+}
+
+// Phones: LinkedIn app bottom tab bar. Home and Jobs are live; the rest are
+// decorative, like their desktop NavStatic counterparts.
+function MobileTabBar({
+  role,
+  isActive,
+}: {
+  role: 'requester' | 'referrer'
+  isActive: (to: string) => boolean
+}) {
+  const tabs = [
+    { label: 'Home', Icon: Home, to: '/' },
+    { label: 'My Network', Icon: Users },
+    { label: 'Post', Icon: SquarePlus },
+    { label: 'Notifications', Icon: Bell, badge: 7 },
+    { label: 'Jobs', Icon: Briefcase, to: role === 'requester' ? '/jobs' : undefined },
+  ]
+
+  return (
+    <nav
+      aria-label="Primary"
+      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+    >
+      {tabs.map(({ label, Icon, to, badge }) => {
+        const active = to ? isActive(to) : false
+        const inner = (
+          <>
+            {active && (
+              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-ink" aria-hidden />
+            )}
+            <span className="relative">
+              <Icon size={24} strokeWidth={active ? 2.25 : 1.75} />
+              {badge ? <Badge count={badge} /> : null}
+            </span>
+            <span className="mt-0.5 whitespace-nowrap text-[11px]">{label}</span>
+          </>
+        )
+        const cls = `relative flex min-w-0 flex-1 flex-col items-center justify-center pb-1.5 pt-2 ${
+          active ? 'text-ink' : 'text-ink-muted'
+        }`
+        return to ? (
+          <Link key={label} to={to} className={cls} aria-current={active ? 'page' : undefined}>
+            {inner}
+          </Link>
+        ) : (
+          <div key={label} className={`${cls} cursor-default`} aria-hidden>
+            {inner}
+          </div>
+        )
+      })}
+    </nav>
   )
 }
 

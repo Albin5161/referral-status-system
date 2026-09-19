@@ -19,7 +19,7 @@ function RequesterOnly({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col pb-16 md:pb-0">
       <LinkedInHeader />
       <main className="flex-1">
         <Routes>

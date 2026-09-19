@@ -56,8 +56,8 @@ export function MessagingPage() {
   }, [role, openId, selected, referralRequests, markRequestsSeen])
 
   return (
-    <div className="animate-fade-in mx-auto max-w-6xl px-4 py-6">
-      <div className="grid h-[calc(100vh-140px)] min-h-[520px] grid-cols-1 overflow-hidden rounded-card border border-line bg-surface shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+    <div className="animate-fade-in mx-auto max-w-6xl md:px-4 md:py-6">
+      <div className="grid h-[calc(100dvh-156px)] min-h-[400px] grid-cols-1 overflow-hidden border-b border-line bg-surface md:h-[calc(100vh-140px)] md:min-h-[520px] md:rounded-card md:border md:shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         {/* Conversation list */}
         <div className={`min-h-0 flex-col border-r border-line ${openId ? 'hidden md:flex' : 'flex'}`}>
           <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">

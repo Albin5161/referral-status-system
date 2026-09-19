@@ -62,8 +62,8 @@ export function StatusPage() {
   const history = historyFor(request, statusUpdates)
 
   return (
-    <div className="animate-fade-in mx-auto max-w-3xl px-4 py-4">
-      <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+    <div className="animate-fade-in mx-auto max-w-3xl md:px-4 md:py-4">
+      <div className="overflow-hidden border-y border-line bg-surface md:rounded-card md:border md:shadow-card">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-line px-4 py-3">
           <button
