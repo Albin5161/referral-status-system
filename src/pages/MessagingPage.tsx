@@ -88,7 +88,10 @@ export function MessagingPage() {
                 name={member.name}
                 preview={preview}
                 when={lastAt ? formatTimestamp(new Date(lastAt).toISOString()) : ''}
-                active={selected === member.id}
+                active={openId === member.id}
+                // With no ?c=, desktop still opens Alex by default, but phones show
+                // only the list, so the default highlight is desktop-only.
+                desktopOnlyActive={!openId && selected === member.id}
                 onClick={() => select(member.id)}
               />
             ))}
@@ -109,12 +112,14 @@ function ConvoRow({
   preview,
   when,
   active,
+  desktopOnlyActive = false,
   onClick,
 }: {
   name: string
   preview: string
   when: string
   active: boolean
+  desktopOnlyActive?: boolean
   onClick: () => void
 }) {
   return (
@@ -124,7 +129,9 @@ function ConvoRow({
         className={`flex w-full items-start gap-3 border-b border-line border-l-2 px-3 py-3 text-left transition-colors ${
           active
             ? 'border-l-accent bg-[#eef3f8]'
-            : 'border-l-transparent hover:bg-surface-hover'
+            : desktopOnlyActive
+              ? 'border-l-transparent hover:bg-surface-hover md:border-l-accent md:bg-[#eef3f8] md:hover:bg-[#eef3f8]'
+              : 'border-l-transparent hover:bg-surface-hover'
         }`}
       >
         <Avatar name={name} size={48} />
