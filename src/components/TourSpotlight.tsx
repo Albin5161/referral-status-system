@@ -25,14 +25,14 @@ const PAD = 4
 // current step) with a soft pulse and a small label. It never blocks clicks and
 // follows the element through scrolling, resizing and screen changes.
 export function TourSpotlight() {
-  const { showOnboarding, feedbackOpen } = useTour()
+  const { showOnboarding, feedbackOpen, resumePrompt } = useTour()
   const { targets } = useTourStep()
   const [spot, setSpot] = useState<Spot | null>(null)
   const key = targets.join('|')
   const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
   useEffect(() => {
-    if (showOnboarding || feedbackOpen || !key) {
+    if (showOnboarding || feedbackOpen || resumePrompt || !key) {
       setSpot(null)
       return
     }
@@ -93,7 +93,7 @@ export function TourSpotlight() {
     }
     tick()
     return () => cancelAnimationFrame(raf)
-  }, [key, showOnboarding, feedbackOpen])
+  }, [key, showOnboarding, feedbackOpen, resumePrompt])
 
   if (!spot) return null
 

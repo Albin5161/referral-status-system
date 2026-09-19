@@ -23,3 +23,15 @@ export function save<T>(key: string, value: T): void {
 export function uid(prefix = 'id'): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }
+
+// Wipe one tester's journey so the next person starts clean. Collected feedback
+// is kept: it belongs to the facilitator, not to the session.
+export function clearSession(keep: string[] = ['tour:feedback']): void {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith(PREFIX) && !keep.includes(k.slice(PREFIX.length)))
+      .forEach((k) => localStorage.removeItem(k))
+  } catch {
+    // ignore — prototype only
+  }
+}

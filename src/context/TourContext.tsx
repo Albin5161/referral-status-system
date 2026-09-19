@@ -10,7 +10,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from './AppContext'
 import { RECIPIENT } from '../sampleData'
-import { load, save } from '../storage'
+import { clearSession, load, save } from '../storage'
 
 // Usability-test scaffolding: onboarding, the "what to do next" guide and the
 // end-of-journey feedback form. Kept apart from AppContext so the product state
@@ -66,6 +66,10 @@ interface TourState {
   submitFeedback: (input: FeedbackInput) => Promise<void>
 
   restartTest: () => void
+
+  // A new visit found someone else's unfinished journey: continue or start fresh?
+  resumePrompt: boolean
+  resumeJourney: () => void
 }
 
 const TourContext = createContext<TourState | null>(null)
@@ -73,6 +77,37 @@ const TourContext = createContext<TourState | null>(null)
 // Where responses go. Set VITE_FEEDBACK_ENDPOINT to a Formspree (or similar)
 // URL that accepts a JSON POST. Without it, responses stay in localStorage only.
 const FEEDBACK_ENDPOINT = import.meta.env.VITE_FEEDBACK_ENDPOINT as string | undefined
+
+// Shared test devices: progress lives in localStorage so a refresh never loses
+// a tester's place, but the NEXT tester must not inherit it. A browser tab is
+// one visit (sessionStorage marks it). On a new visit we start fresh if the last
+// journey was finished or has sat idle; if it stopped recently we ask, since
+// it may be the same person who closed the tab by accident.
+const IDLE_RESET_MS = 30 * 60 * 1000
+
+const RESUME_CANDIDATE: boolean = (() => {
+  let newVisit = true
+  try {
+    const key = 'referral-status:visit'
+    newVisit = !sessionStorage.getItem(key)
+    sessionStorage.setItem(key, '1')
+  } catch {
+    // sessionStorage unavailable: treat every load as a continuing visit
+    newVisit = false
+  }
+  if (!newVisit) return false
+
+  const started =
+    load('tour:onboardingDone', false) || load<unknown[]>('referralRequests', []).length > 0
+  if (!started) return false
+
+  const idle = Date.now() - load('tour:lastActive', 0) > IDLE_RESET_MS
+  if (idle || load('tour:outcomeSeen', false)) {
+    clearSession() // runs before any provider reads its initial state
+    return false
+  }
+  return true
+})()
 
 export function TourProvider({ children }: { children: ReactNode }) {
   const { resetPrototype } = useApp()
@@ -83,6 +118,25 @@ export function TourProvider({ children }: { children: ReactNode }) {
     load('tour:feedbackSubmitted', false),
   )
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [resumePrompt, setResumePrompt] = useState(RESUME_CANDIDATE)
+
+  // Last sign of life, for the idle reset above. Throttled to one write per 10s.
+  useEffect(() => {
+    let last = 0
+    const touch = () => {
+      const now = Date.now()
+      if (now - last < 10_000) return
+      last = now
+      save('tour:lastActive', now)
+    }
+    touch()
+    window.addEventListener('pointerdown', touch)
+    window.addEventListener('keydown', touch)
+    return () => {
+      window.removeEventListener('pointerdown', touch)
+      window.removeEventListener('keydown', touch)
+    }
+  }, [])
 
   useEffect(() => save('tour:onboardingDone', onboardingDone), [onboardingDone])
   useEffect(() => save('tour:outcomeSeen', outcomeSeen), [outcomeSeen])
@@ -130,12 +184,15 @@ export function TourProvider({ children }: { children: ReactNode }) {
     setFeedbackSubmitted(false)
     setFeedbackOpen(false)
     setOnboardingDone(false)
+    setResumePrompt(false)
     navigate('/')
   }, [resetPrototype, navigate])
 
+  const resumeJourney = useCallback(() => setResumePrompt(false), [])
+
   const value = useMemo<TourState>(
     () => ({
-      showOnboarding: !onboardingDone,
+      showOnboarding: !onboardingDone && !resumePrompt,
       finishOnboarding,
       replayOnboarding,
       outcomeSeen,
@@ -146,8 +203,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
       closeFeedback,
       submitFeedback,
       restartTest,
+      resumePrompt,
+      resumeJourney,
     }),
     [
+      resumePrompt,
+      resumeJourney,
       onboardingDone,
       finishOnboarding,
       replayOnboarding,

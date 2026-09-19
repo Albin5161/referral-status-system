@@ -67,6 +67,11 @@ names their next step through the whole journey (ask as Albin → switch to Alex
 short survey opens: experience rating, whether the feature is useful and why,
 and what could be better.
 
+Each browser tab counts as one visit. If a new visit finds a finished journey,
+or one idle for 30+ minutes, it starts fresh automatically; if someone stopped
+mid-way recently, it asks whether to continue or start fresh. A refresh never
+resets progress, and collected feedback is never cleared.
+
 Responses are always saved in the tester's browser (see `/feedback`). To collect
 them from remote testers, create a free [Formspree](https://formspree.io) form
 and set its URL as an environment variable (locally in `.env.local`, and in

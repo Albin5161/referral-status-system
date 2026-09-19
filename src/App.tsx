@@ -6,6 +6,7 @@ import { Onboarding } from './components/Onboarding'
 import { FeedbackForm } from './components/FeedbackForm'
 import { FeedbackNudge } from './components/FeedbackNudge'
 import { TourSpotlight } from './components/TourSpotlight'
+import { ResumePrompt } from './components/ResumePrompt'
 import { HomePage } from './pages/HomePage'
 import { MessagingPage } from './pages/MessagingPage'
 import { JobTrackerPage } from './pages/JobTrackerPage'
@@ -69,6 +70,7 @@ export default function App() {
       <FeedbackNudge />
       <FeedbackForm />
       <TourSpotlight />
+      <ResumePrompt />
     </div>
   )
 }
