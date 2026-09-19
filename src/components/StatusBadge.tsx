@@ -1,5 +1,5 @@
 import type { ReferralStatus } from '../types'
-import { StatusIcon } from '../statusMeta'
+import { StatusIcon, statusLabel } from '../statusMeta'
 
 // PRD §9: status is communicated through TEXT (and monochrome icon), never through
 // a new color-coding scheme. Every status uses the same neutral treatment.
@@ -16,7 +16,7 @@ export function StatusBadge({
       className={`inline-flex items-center rounded-full border border-line bg-black/[0.04] font-medium text-ink ${sizing}`}
     >
       <StatusIcon status={status} size={size === 'sm' ? 12 : 14} className="text-ink-muted" />
-      {status}
+      {statusLabel(status)}
     </span>
   )
 }

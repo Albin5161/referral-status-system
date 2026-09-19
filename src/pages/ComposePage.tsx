@@ -42,9 +42,11 @@ export function ComposePage() {
   const activeJob = presetJob ?? JOB
 
   const [type, setType] = useState<MessageType>('referral')
-  const [message, setMessage] = useState(defaultReferralMessage(activeJob))
+  const [message, setMessage] = useState(defaultReferralMessage(activeJob, recipient.name))
   const [jobAttached, setJobAttached] = useState(lean) // job known from context in lean mode
-  const [resumeAttached, setResumeAttached] = useState(false) // optional resume (mock)
+  const [resumeAttached, setResumeAttached] = useState(false) // required resume (mock)
+  const [resumeError, setResumeError] = useState(false)
+  const first = recipient.name.split(' ')[0]
   const [step, setStep] = useState<Step>('compose')
   const [validationError, setValidationError] = useState<string | null>(null)
   const [simulateFailure, setSimulateFailure] = useState(false)
@@ -54,7 +56,7 @@ export function ComposePage() {
   const switchType = (next: MessageType) => {
     setType(next)
     setValidationError(null)
-    if (next === 'referral' && !message.trim()) setMessage(defaultReferralMessage(activeJob))
+    if (next === 'referral' && !message.trim()) setMessage(defaultReferralMessage(activeJob, recipient.name))
   }
 
   // Step 1 → proceed. Referral requests must have a job attached (PRD §5.4).
@@ -65,10 +67,10 @@ export function ComposePage() {
       navigate(`/messaging?c=${recipient.id}`)
       return
     }
-    if (!jobAttached) {
-      setValidationError('Select a job posting to send a Referral Request.')
-      return
-    }
+    const missingJob = !jobAttached
+    if (missingJob) setValidationError('Add the job you’re applying for, so ' + first + ' knows which role it is.')
+    setResumeError(!resumeAttached)
+    if (missingJob || !resumeAttached) return
     setValidationError(null)
     setStep('review') // genuine confirmation step guarding a one-way door (PRD §5.6)
   }
@@ -85,7 +87,7 @@ export function ComposePage() {
           jobTitleSnapshot: activeJob.title,
           companySnapshot: activeJob.company,
           initialMessage: message.trim(),
-          resumeName: resumeAttached ? DEFAULT_RESUME : undefined,
+          resumeName: DEFAULT_RESUME,
         },
         { simulateFailure },
       )
@@ -111,13 +113,13 @@ export function ComposePage() {
           </button>
           <h1 className="text-[15px] font-semibold text-ink">
             {step === 'review'
-              ? 'Review your Referral Request'
+              ? 'Ready to send?'
               : step === 'creating'
-                ? 'Creating Referral Request…'
+                ? 'Sending your request…'
                 : step === 'error'
-                  ? 'Something went wrong'
+                  ? 'That didn’t go through'
                   : lean
-                    ? 'Ask for referral'
+                    ? `Ask ${first} for a referral`
                     : 'New message'}
           </h1>
         </div>
@@ -153,7 +155,7 @@ export function ComposePage() {
                     onClick={() => switchType('referral')}
                     icon={<FileText size={16} />}
                     label="Referral Request"
-                    hint="Ask for a referral"
+                    hint="Ask for a referral you can follow"
                   />
                 </div>
               </div>
@@ -178,11 +180,11 @@ export function ComposePage() {
 
             {/* Message body */}
             <div>
-              <p className="mb-1.5 text-[13px] font-medium text-ink-muted">Message</p>
+              <p className="mb-1.5 text-[13px] font-medium text-ink-muted">Your message</p>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                rows={4}
+                rows={6}
                 className="w-full resize-none rounded-card border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
                 placeholder="Write your message…"
               />
@@ -192,7 +194,7 @@ export function ComposePage() {
             {!lean && type === 'referral' && (
               <div>
                 <p className="mb-1.5 text-[13px] font-medium text-ink-muted">
-                  Job posting
+                  Job you’re applying for
                 </p>
                 {jobAttached ? (
                   <div className="flex items-center gap-3 rounded-card border border-line bg-surface-hover px-3 py-2.5">
@@ -239,7 +241,10 @@ export function ComposePage() {
             {(lean || type === 'referral') && (
               <div>
                 <p className="mb-1.5 text-[13px] font-medium text-ink-muted">
-                  Resume <span className="text-ink-faint">(optional)</span>
+                  Your resume
+                </p>
+                <p className="-mt-1 mb-2 text-[12px] text-ink-muted">
+                  Required. It helps {first} vouch for you with confidence.
                 </p>
                 {resumeAttached ? (
                   <div className="flex items-center gap-3 rounded-card border border-line bg-surface-hover px-3 py-2.5">
@@ -262,12 +267,22 @@ export function ComposePage() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => setResumeAttached(true)}
-                    className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover"
+                    onClick={() => {
+                      setResumeAttached(true)
+                      setResumeError(false)
+                    }}
+                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover ${
+                      resumeError ? 'border-danger' : 'border-line'
+                    }`}
                   >
                     <Paperclip size={16} />
                     Attach resume
                   </button>
+                )}
+                {resumeError && (
+                  <p className="mt-2 text-[13px] font-medium text-danger">
+                    Please attach your resume before sending.
+                  </p>
                 )}
               </div>
             )}
@@ -277,7 +292,7 @@ export function ComposePage() {
                 onClick={handleContinue}
                 disabled={!lean && type === 'message' && !message.trim()}
               >
-                {lean || type === 'referral' ? 'Continue' : 'Send'}
+                {lean || type === 'referral' ? 'Review request' : 'Send'}
               </Button>
             </div>
           </div>
@@ -286,32 +301,29 @@ export function ComposePage() {
         {step === 'review' && (
           <div className="space-y-4 p-4">
             <p className="text-[13px] text-ink-muted">
-              Please confirm the details below. A Referral Request will be created.
+              Take a quick look. Once it’s sent, {first} will see your request, and you’ll
+              be able to follow its status without having to chase.
             </p>
             <dl className="divide-y divide-line rounded-card border border-line">
-              <Row label="Recipient" value={recipient.name} />
+              <Row label="To" value={recipient.name} />
               <Row
-                label="Job posting"
+                label="Role"
                 value={`${activeJob.title} · ${activeJob.company}`}
               />
-              <Row label="Message type" value="Referral Request" />
-              <Row
-                label="Resume"
-                value={resumeAttached ? DEFAULT_RESUME : 'Not attached'}
-              />
+              <Row label="Resume" value={DEFAULT_RESUME} />
             </dl>
             <div className="rounded-card border border-line bg-surface-hover px-3 py-2.5">
               <p className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-                Message
+                Your message
               </p>
-              <p className="mt-1 text-sm text-ink">{message}</p>
+              <p className="mt-1 whitespace-pre-line text-sm text-ink">{message}</p>
             </div>
 
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="ghost" onClick={() => setStep('compose')}>
                 Edit
               </Button>
-              <Button onClick={handleConfirm}>Confirm &amp; create</Button>
+              <Button onClick={handleConfirm}>Send request</Button>
             </div>
           </div>
         )}
@@ -319,24 +331,25 @@ export function ComposePage() {
         {step === 'creating' && (
           <div className="flex flex-col items-center gap-3 p-10 text-center">
             <Loader2 size={28} className="animate-spin text-accent" />
-            <p className="text-sm text-ink-muted">Creating Referral Request…</p>
+            <p className="text-sm text-ink-muted">Sending your request to {first}…</p>
           </div>
         )}
 
         {step === 'error' && (
           <div className="space-y-4 p-4">
-            <p className="text-sm font-medium text-danger">
-              Couldn&apos;t create your Referral Request.
+            <p className="text-sm font-medium text-ink">
+              We couldn&apos;t send your request just now. Nothing is lost: your message is
+              saved below, so you can try again.
             </p>
             <div className="rounded-card border border-line bg-surface-hover px-3 py-2.5">
               <p className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-                Your message (preserved)
+                Your message
               </p>
               <p className="mt-1 text-sm text-ink">{message}</p>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setStep('compose')}>
-                Edit Message
+                Edit message
               </Button>
               <Button
                 onClick={() => {
@@ -344,7 +357,7 @@ export function ComposePage() {
                   handleConfirm()
                 }}
               >
-                Retry
+                Try again
               </Button>
             </div>
           </div>

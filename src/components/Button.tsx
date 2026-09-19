@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'ghost'
 
@@ -9,13 +9,10 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 // Pill buttons — PRD §9. Primary actions turn solid blue only when actionable;
 // disabled state must be visibly different (fidelity requirement).
-export function Button({
-  variant = 'primary',
-  className = '',
-  children,
-  disabled,
-  ...rest
-}: Props) {
+export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
+  { variant = 'primary', className = '', children, disabled, ...rest },
+  ref,
+) {
   const base =
     'inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold px-4 py-1.5 transition-[background-color,color,transform] duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100'
 
@@ -33,6 +30,7 @@ export function Button({
 
   return (
     <button
+      ref={ref}
       className={`${base} ${variants[variant]} ${className}`}
       disabled={disabled}
       {...rest}
@@ -40,4 +38,4 @@ export function Button({
       {children}
     </button>
   )
-}
+})

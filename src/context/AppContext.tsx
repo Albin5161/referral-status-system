@@ -17,10 +17,12 @@ import type {
 import { ME, RECIPIENT, SEED_MESSAGES } from '../sampleData'
 import { load, save, uid } from '../storage'
 
-// An in-app notification (PRD §4 item 6) raised when the referrer posts an update.
+// An entry in the requester's Notifications tab, raised when the referrer posts
+// an update.
 export interface AppNotification {
   id: string
   referralRequestId: string
+  statusUpdateId?: string
   status: ReferralStatus
   createdAt: string
   read: boolean
@@ -190,6 +192,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           {
             id: uid('ntf'),
             referralRequestId,
+            statusUpdateId: update.id,
             status: newStatus,
             createdAt: now,
             read: false,

@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --chrome-h: 33px; /* header height; kept exact by LinkedInHeader */
+}
+
 html,
 body,
 #root {

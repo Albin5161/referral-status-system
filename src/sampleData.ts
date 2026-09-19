@@ -1,7 +1,7 @@
 import type { LinkedInMember, ThreadMessage, TrackedJob } from './types'
 
 // Sample data — PRD §8. The canonical scenario (Alex Johnson + the Google job +
-// DEFAULT_REFERRAL_MESSAGE) is preserved exactly. Entry Point 2 (Job Tracker →
+// default message) is preserved. Entry Point 2 (Job Tracker →
 // Refer, PRD §4b) needs more than one connection and job, so this file also
 // defines the requester's connections and a small Job Tracker list.
 export const ME: LinkedInMember = { id: 'u1', name: 'Albin Sigi' }
@@ -63,18 +63,18 @@ export const JOBS: TrackedJob[] = [
 // Back-compat: the single hardcoded job referenced by Entry Point 1 / PRD §8.
 export const JOB = { id: JOBS[0].id, title: JOBS[0].title, company: JOBS[0].company }
 
-// PRD §8 exact string. For the Google job this equals the template below verbatim.
-export const DEFAULT_REFERRAL_MESSAGE =
-  "Hi! I saw the UX Designer, Google Cloud role at Google and would really appreciate a referral if you think I'd be a good fit."
 
 // Mock resume filename used by the optional resume attachment (no real upload).
 export const DEFAULT_RESUME = 'Albin_Sigi_Resume.pdf'
 
-// The standard default referral message, templated per job (PRD §4b step 4 says the
-// lean composer is prefilled with "the standard default message (§8)"). Produces the
-// exact §8 string for the Google job.
-export function defaultReferralMessage(job: { title: string; company: string }): string {
-  return `Hi! I saw the ${job.title} role at ${job.company} and would really appreciate a referral if you think I'd be a good fit.`
+// The prefilled referral message, templated per job and person. Written to sound
+// like a person asking a favour: warm, specific, and easy to say no to.
+export function defaultReferralMessage(
+  job: { title: string; company: string },
+  recipientName: string,
+): string {
+  const first = recipientName.split(' ')[0]
+  return `Hi ${first}, I hope you’re doing well! I’ve applied for the ${job.title} role at ${job.company} and I’m really excited about it. Would you be comfortable referring me? No pressure at all if not. I’ve attached my resume in case it helps. Thank you so much!`
 }
 
 // A short seed conversation so the Alex thread does not start empty. These are

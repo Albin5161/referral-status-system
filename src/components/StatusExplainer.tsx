@@ -1,27 +1,17 @@
 import type { ReferralStatus } from '../types'
+import { useApp } from '../context/AppContext'
+import { statusMeaning } from '../statusMeta'
 
-// State-specific copy — PRD §6. Strings are used EXACTLY as written; do not paraphrase.
-// Only "No Update Received" has designed explanatory copy. Withdrawn shows a single
-// neutral line. All other states show NO explanatory copy (label + timestamp only).
+// One plain sentence under the current status saying what it means for the
+// person looking at it. Every status gets one, so nobody has to guess.
 export function StatusExplainer({ status }: { status: ReferralStatus }) {
-  if (status === 'No Update Received') {
-    return (
-      <div className="space-y-1 text-sm text-ink-muted">
-        <p>The referrer has not posted a status update yet.</p>
-        <p>Your request is still open.</p>
-        <p>
-          If the referrer updates your request later, this status will
-          automatically change.
-        </p>
-      </div>
-    )
-  }
-
-  if (status === 'Withdrawn') {
-    // No language implying permanence — PRD §6 / §7 provisional note.
-    return <p className="text-sm text-ink-muted">This request is now withdrawn.</p>
-  }
-
-  // Pending, Considering, Referred, Unable to Refer — intentionally no copy.
-  return null
+  const { role, members } = useApp()
+  return (
+    <p className="text-sm leading-relaxed text-ink-muted">
+      {statusMeaning(status, role, {
+        requester: members.me.name,
+        referrer: members.recipient.name,
+      })}
+    </p>
+  )
 }

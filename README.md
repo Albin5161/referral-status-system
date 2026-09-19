@@ -38,13 +38,43 @@ between the two perspectives that share the same `localStorage` data:
 
 | Route | Role | Purpose |
 |-------|------|---------|
-| `/thread` | Both | Message thread + inline Referral Request card |
-| `/compose` | Requester | Create a Referral Request (type choice → confirm → pessimistic create) |
-| `/status/:id` | Both | Current status + full history; Withdraw (requester) / Update Status (referrer) |
+| `/messaging` | Both | Inbox + 1:1 threads with the inline Referral Request card |
+| `/jobs` | Requester | Job Tracker: ask a connection at the company for a referral |
+| `/compose` | Requester | Create a Referral Request (job + resume required → review → send) |
+| `/status/:id` | Both | Current status, what it means, full history; Withdraw (requester) / update (referrer) |
+| `/notifications` | Both | Status updates land here for the requester, with an unread badge on the bell |
 | `/my-jobs` | Requester | List of all the requester's referral requests |
+| `/feedback` | Facilitator | Test responses saved in this browser, with CSV export (not linked in the UI) |
 
-A **status notification** banner appears for the requester when the referrer
-posts an update; tapping it opens the Referral Status view.
+## Statuses
+
+The stored values follow the PRD object model; people see plain labels.
+
+| Stored | Shown as | Who sets it | Meaning |
+|--------|----------|-------------|---------|
+| Pending | Sent | System, on creation | Waiting on the referrer |
+| Considering | Looking into it | Referrer | Seen and being worked on; still open |
+| No Update Received | No reply yet | System only | The referrer has been silent; reversible by any later update |
+| Referred | Referred | Referrer | Done: the referral was made (final) |
+| Unable to Refer | Can’t refer | Referrer | Done: the referrer can’t refer this time (final) |
+| Withdrawn | Withdrawn | Requester | The requester no longer needs it |
+
+## Usability testing
+
+First-time visitors get a 4-screen intro, then a dark guide bar under the header
+names their next step through the whole journey (ask as Albin → switch to Alex
+→ respond → switch back → see the update). When they reach the final status, a
+short survey opens: experience rating, whether the feature is useful and why,
+and what could be better.
+
+Responses are always saved in the tester's browser (see `/feedback`). To collect
+them from remote testers, create a free [Formspree](https://formspree.io) form
+and set its URL as an environment variable (locally in `.env.local`, and in
+Vercel under Project → Settings → Environment Variables):
+
+```bash
+VITE_FEEDBACK_ENDPOINT=https://formspree.io/f/yourFormId
+```
 
 ## Design decisions worth knowing
 

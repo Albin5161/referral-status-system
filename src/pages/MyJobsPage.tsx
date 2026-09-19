@@ -35,13 +35,13 @@ export function MyJobsPage() {
         {rows.length === 0 ? (
           <div className="px-4 py-12 text-center">
             <p className="text-sm text-ink-muted">
-              You haven&apos;t sent any referral requests yet.
+              You haven&apos;t asked anyone for a referral yet. When you do, you can follow each one here.
             </p>
             <Link
-              to="/messaging"
+              to="/jobs"
               className="mt-3 inline-block text-sm font-semibold text-accent"
             >
-              Go to messaging to start one
+              Find someone to ask in your Job Tracker
             </Link>
           </div>
         ) : (

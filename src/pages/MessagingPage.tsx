@@ -4,6 +4,7 @@ import { ArrowLeft, PenSquare, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { CONNECTIONS, ME, RECIPIENT } from '../sampleData'
 import { deriveCurrentStatus } from '../stateMachine'
+import { statusLabel } from '../statusMeta'
 import { Avatar } from '../components/Avatar'
 import { ThreadView } from '../components/ThreadView'
 import { formatTimestamp } from '../format'
@@ -13,12 +14,15 @@ import { formatTimestamp } from '../format'
 // selects the active conversation so other flows (Job Tracker → Refer) can deep
 // link straight to the right thread.
 export function MessagingPage() {
-  const { role, threadMessages, referralRequests, statusUpdates, markRequestsSeen } =
+  const { role, threadMessages, referralRequests, statusUpdates, seenRequestIds, markRequestsSeen } =
     useApp()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
 
-  const rows = CONNECTIONS.map((c) => {
+  // Every conversation is ME ↔ a connection. The referrer is Alex, so their inbox
+  // holds just the one conversation with Albin.
+  const convos = role === 'referrer' ? [RECIPIENT] : CONNECTIONS
+  const rows = convos.map((c) => {
     const msgs = threadMessages.filter((m) => m.peerId === c.id)
     const reqs = referralRequests.filter((r) => r.recipientId === c.id)
     const lastMsg = msgs.at(-1)
@@ -31,9 +35,12 @@ export function MessagingPage() {
     if (lastMsg && (!lastReq || new Date(lastMsg.sentAt) >= new Date(lastReq.createdAt))) {
       preview = `${lastMsg.senderId === ME.id ? 'You: ' : ''}${lastMsg.body}`
     } else if (lastReq) {
-      preview = `Referral Request · ${deriveCurrentStatus(lastReq, statusUpdates)}`
+      preview = `Referral Request · ${statusLabel(deriveCurrentStatus(lastReq, statusUpdates))}`
     }
-    return { member: c, preview, lastAt }
+    const unread =
+      role === 'referrer' && reqs.some((r) => !seenRequestIds.includes(r.id))
+    if (unread) preview = `New Referral Request · ${lastReq!.jobTitleSnapshot}`
+    return { member: c, name: role === 'referrer' ? ME.name : c.name, preview, lastAt, unread }
   }).sort((a, b) => b.lastAt - a.lastAt)
 
   // ?c= is the open conversation. Without it, desktop defaults to Alex while
@@ -57,7 +64,7 @@ export function MessagingPage() {
 
   return (
     <div className="animate-fade-in mx-auto max-w-6xl md:px-4 md:py-6">
-      <div className="grid h-[calc(100dvh-33px)] min-h-[400px] grid-cols-1 overflow-hidden bg-surface md:h-[calc(100vh-140px)] md:min-h-[520px] md:rounded-card md:border md:shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+      <div className="grid h-[calc(100dvh-var(--chrome-h))] min-h-[400px] grid-cols-1 overflow-hidden bg-surface md:h-[calc(100vh-var(--chrome-h)-88px)] md:min-h-[520px] md:rounded-card md:border md:shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         {/* Conversation list */}
         <div className={`min-h-0 flex-col border-r border-line ${openId ? 'hidden md:flex' : 'flex'}`}>
           <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
@@ -91,11 +98,12 @@ export function MessagingPage() {
           </div>
 
           <ul className="min-h-0 flex-1 overflow-y-auto">
-            {rows.map(({ member, preview, lastAt }) => (
+            {rows.map(({ member, name, preview, lastAt, unread }) => (
               <ConvoRow
                 key={member.id}
-                name={member.name}
+                name={name}
                 preview={preview}
+                unread={unread}
                 when={lastAt ? formatTimestamp(new Date(lastAt).toISOString()) : ''}
                 active={openId === member.id}
                 // With no ?c=, desktop still opens Alex by default, but phones show
@@ -122,10 +130,12 @@ function ConvoRow({
   when,
   active,
   desktopOnlyActive = false,
+  unread = false,
   onClick,
 }: {
   name: string
   preview: string
+  unread?: boolean
   when: string
   active: boolean
   desktopOnlyActive?: boolean
@@ -149,7 +159,18 @@ function ConvoRow({
             <span className="truncate text-[16px] font-semibold text-ink md:text-sm">{name}</span>
             <span className="shrink-0 text-[12px] text-ink-muted">{when}</span>
           </div>
-          <p className="truncate text-[14px] text-ink-muted md:text-[13px]">{preview}</p>
+          <div className="flex items-center gap-2">
+            <p
+              className={`min-w-0 flex-1 truncate text-[14px] md:text-[13px] ${
+                unread ? 'font-semibold text-ink' : 'text-ink-muted'
+              }`}
+            >
+              {preview}
+            </p>
+            {unread && (
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent" aria-label="Unread" />
+            )}
+          </div>
         </div>
       </button>
     </li>

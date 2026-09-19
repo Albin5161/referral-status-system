@@ -60,41 +60,44 @@ export function HomePage() {
 
       {/* Center — feed */}
       <section className="space-y-2">
-        {/* Demo pointers — two entry points into the same referral flow */}
-        <div className="grid gap-2 px-2 sm:grid-cols-2 md:px-0">
-          <Link
-            to="/messaging"
-            className="flex items-center gap-3 rounded-card border border-accent/40 bg-accent/5 px-4 py-3 hover:bg-accent/10"
-          >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15 text-accent">
-              <MessageSquare size={18} />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-ink">
-                From Messaging
+        {/* Demo pointers — two entry points into the same referral flow. Requester
+            only: the referrer should find their request via the Messaging badge. */}
+        {role === 'requester' && (
+          <div className="grid gap-2 px-2 sm:grid-cols-2 md:px-0">
+            <Link
+              to="/messaging"
+              className="flex items-center gap-3 rounded-card border border-accent/40 bg-accent/5 px-4 py-3 hover:bg-accent/10"
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15 text-accent">
+                <MessageSquare size={18} />
               </span>
-              <span className="block text-[12px] text-ink-muted">
-                Open your chat with Alex Johnson.
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-ink">
+                  From Messaging
+                </span>
+                <span className="block text-[12px] text-ink-muted">
+                  Open your chat with Alex Johnson.
+                </span>
               </span>
-            </span>
-          </Link>
-          <Link
-            to="/jobs"
-            className="flex items-center gap-3 rounded-card border border-accent/40 bg-accent/5 px-4 py-3 hover:bg-accent/10"
-          >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15 text-accent">
-              <Briefcase size={18} />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-ink">
-                From Job Tracker
+            </Link>
+            <Link
+              to="/jobs"
+              className="flex items-center gap-3 rounded-card border border-accent/40 bg-accent/5 px-4 py-3 hover:bg-accent/10"
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15 text-accent">
+                <Briefcase size={18} />
               </span>
-              <span className="block text-[12px] text-ink-muted">
-                Ask a connection for a referral.
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-ink">
+                  From Job Tracker
+                </span>
+                <span className="block text-[12px] text-ink-muted">
+                  Ask a connection for a referral.
+                </span>
               </span>
-            </span>
-          </Link>
-        </div>
+            </Link>
+          </div>
+        )}
 
         {/* Start a post */}
         <div className="hidden rounded-card border border-line bg-surface p-3 shadow-card md:block">

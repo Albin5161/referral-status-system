@@ -1,9 +1,12 @@
+import { useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown, Grid3x3, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { useTourStep } from '../context/TourContext'
 import { ME, RECIPIENT } from '../sampleData'
 import { Avatar } from './Avatar'
 import { RoleSwitcher } from './RoleSwitcher'
+import { TourGuide } from './TourGuide'
 import {
   BellFill,
   HomeFill,
@@ -18,7 +21,7 @@ import {
 // search bar and bottom tab bar. Messaging, Compose and Status open full screen
 // with their own back arrow.
 export function hasMobileChrome(pathname: string) {
-  return pathname === '/' || pathname.startsWith('/jobs')
+  return pathname === '/' || pathname.startsWith('/jobs') || pathname.startsWith('/notifications')
 }
 
 // LinkedIn-style top navigation. Layout, density and the single blue accent are
@@ -29,22 +32,42 @@ export function LinkedInHeader() {
   const { pathname } = useLocation()
   const me = role === 'requester' ? ME : RECIPIENT
 
-  // Requester: unread status-update notifications. Referrer: incoming referral
-  // requests addressed to them that they haven't opened yet.
+  // Referrer: incoming referral requests they haven't opened (Messaging).
+  // Requester: unread status updates (Notifications).
   const messagingUnread =
-    role === 'requester'
-      ? notifications.filter((n) => !n.read).length
-      : referralRequests.filter(
+    role === 'referrer'
+      ? referralRequests.filter(
           (r) => r.recipientId === RECIPIENT.id && !seenRequestIds.includes(r.id),
         ).length
+      : 0
+  const notificationsUnread =
+    role === 'requester' ? notifications.filter((n) => !n.read).length : 0
 
   const isActive = (to: string) =>
     to === '/' ? pathname === '/' : pathname.startsWith(to)
   const chrome = hasMobileChrome(pathname)
 
+  // During the test, draw the eye to the badge the referrer should tap.
+  const tourStep = useTourStep().id
+  const pulse = tourStep === 'open-messaging'
+  const pulseBell = tourStep === 'see-outcome'
+
+  // Publish the header's height so full-height screens (Messaging) can fill
+  // exactly what's left, whichever rows are showing.
+  const headerRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() =>
+      document.documentElement.style.setProperty('--chrome-h', `${el.offsetHeight}px`),
+    )
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-line bg-surface">
+      <header ref={headerRef} className="sticky top-0 z-30 border-b border-line bg-surface">
         {/* Phones: LinkedIn app top bar (avatar, search, messaging) */}
         <div className={`h-14 items-center gap-3 px-4 md:hidden ${chrome ? 'flex' : 'hidden'}`}>
           <span className="shrink-0" aria-hidden>
@@ -67,7 +90,7 @@ export function LinkedInHeader() {
             className="relative shrink-0 rounded-full p-1 text-ink-muted hover:text-ink"
           >
             <MessagingFill size={26} />
-            {messagingUnread ? <Badge count={messagingUnread} /> : null}
+            {messagingUnread ? <Badge count={messagingUnread} pulse={pulse} /> : null}
           </Link>
         </div>
 
@@ -114,8 +137,16 @@ export function LinkedInHeader() {
               icon={<MessagingFill />}
               label="Messaging"
               badge={messagingUnread}
+              pulse={pulse}
             />
-            <NavStatic icon={<BellFill />} label="Notifications" badge={7} />
+            <NavItem
+              to="/notifications"
+              active={isActive('/notifications')}
+              icon={<BellFill />}
+              label="Notifications"
+              badge={notificationsUnread}
+              pulse={pulseBell}
+            />
             <NavStatic
               icon={<Avatar name={me.name} size={24} />}
               label="Me"
@@ -133,9 +164,19 @@ export function LinkedInHeader() {
             <RoleSwitcher />
           </div>
         </div>
+
+        {/* Usability-test guide: the tester's next step */}
+        <TourGuide />
       </header>
 
-      {chrome && <MobileTabBar role={role} isActive={isActive} />}
+      {chrome && (
+        <MobileTabBar
+          role={role}
+          isActive={isActive}
+          notificationsUnread={notificationsUnread}
+          pulseBell={pulseBell}
+        />
+      )}
     </>
   )
 }
@@ -145,15 +186,19 @@ export function LinkedInHeader() {
 function MobileTabBar({
   role,
   isActive,
+  notificationsUnread,
+  pulseBell,
 }: {
   role: 'requester' | 'referrer'
   isActive: (to: string) => boolean
+  notificationsUnread: number
+  pulseBell: boolean
 }) {
   const tabs = [
     { label: 'Home', Icon: HomeFill, to: '/' },
     { label: 'My Network', Icon: NetworkFill },
     { label: 'Post', Icon: PostFill },
-    { label: 'Notifications', Icon: BellFill, badge: 7 },
+    { label: 'Notifications', Icon: BellFill, to: '/notifications', badge: notificationsUnread, pulse: pulseBell },
     { label: 'Jobs', Icon: JobsFill, to: role === 'requester' ? '/jobs' : undefined },
   ]
 
@@ -162,7 +207,7 @@ function MobileTabBar({
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      {tabs.map(({ label, Icon, to, badge }) => {
+      {tabs.map(({ label, Icon, to, badge, pulse }) => {
         const active = to ? isActive(to) : false
         const inner = (
           <>
@@ -171,7 +216,7 @@ function MobileTabBar({
             )}
             <span className="relative">
               <Icon size={24} />
-              {badge ? <Badge count={badge} /> : null}
+              {badge ? <Badge count={badge} pulse={pulse} /> : null}
             </span>
             <span className="mt-0.5 whitespace-nowrap text-[12px]">{label}</span>
           </>
@@ -199,12 +244,14 @@ function NavItem({
   icon,
   label,
   badge,
+  pulse,
 }: {
   to: string
   active: boolean
   icon: React.ReactNode
   label: string
   badge?: number
+  pulse?: boolean
 }) {
   return (
     <Link
@@ -217,7 +264,7 @@ function NavItem({
     >
       <span className="relative">
         {icon}
-        {badge ? <Badge count={badge} /> : null}
+        {badge ? <Badge count={badge} pulse={pulse} /> : null}
       </span>
       <span className="mt-0.5 whitespace-nowrap">{label}</span>
     </Link>
@@ -253,10 +300,13 @@ function NavStatic({
   )
 }
 
-function Badge({ count }: { count: number }) {
+function Badge({ count, pulse }: { count: number; pulse?: boolean }) {
   return (
     <span className="absolute -right-2 -top-1 grid min-w-[16px] place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-white">
-      {count}
+      {pulse && (
+        <span className="absolute inset-0 animate-ping rounded-full bg-danger/70" aria-hidden />
+      )}
+      <span className="relative">{count}</span>
     </span>
   )
 }

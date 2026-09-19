@@ -2,22 +2,24 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Briefcase, Check, Paperclip } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { useTour } from '../context/TourContext'
 import {
   allowedTransitions,
   deriveCurrentStatus,
   historyFor,
   isTerminal,
 } from '../stateMachine'
-import { RECIPIENT } from '../sampleData'
+import { ME, RECIPIENT } from '../sampleData'
 import type { ReferralStatus } from '../types'
 import { StatusExplainer } from '../components/StatusExplainer'
 import { Button } from '../components/Button'
-import { StatusIcon } from '../statusMeta'
+import { StatusIcon, referrerChoice, statusLabel } from '../statusMeta'
 import { displayActor, formatDate, formatTimestamp } from '../format'
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>()
-  const { role, referralRequests, statusUpdates, markRequestsSeen } = useApp()
+  const { role, referralRequests, statusUpdates, markRequestsSeen, notifications, markNotificationRead } =
+    useApp()
   const navigate = useNavigate()
 
   // Brief, auto-dismissing acknowledgment after a status change (FIX 2 —
@@ -38,6 +40,24 @@ export function StatusPage() {
   )
 
   const request = referralRequests.find((r) => r.id === id)
+
+  // Test journey ends when the requester sees a status the referrer set.
+  const { markOutcomeSeen } = useTour()
+  const referrerResponded = statusUpdates.some(
+    (u) => u.referralRequestId === id && u.changedBy === RECIPIENT.name,
+  )
+  useEffect(() => {
+    if (role === 'requester' && referrerResponded) markOutcomeSeen()
+  }, [role, referrerResponded, markOutcomeSeen])
+
+  // Seeing the status here counts as reading its notifications, however the
+  // requester got here.
+  useEffect(() => {
+    if (role !== 'requester') return
+    notifications
+      .filter((n) => n.referralRequestId === id && !n.read)
+      .forEach((n) => markNotificationRead(n.id))
+  }, [role, id, notifications, markNotificationRead])
 
   // Referrer opening a request's detail marks it seen (clears the Messaging badge).
   useEffect(() => {
@@ -108,7 +128,7 @@ export function StatusPage() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[22px] font-semibold leading-tight text-ink">
-                {status}
+                {statusLabel(status)}
               </p>
               <p className="mt-0.5 text-[12px] text-ink-faint">
                 Updated {formatTimestamp(history.at(-1)?.changedAt ?? request.createdAt)}
@@ -170,7 +190,7 @@ export function StatusPage() {
                     {!isLast && <span className="my-1 w-px flex-1 bg-line" />}
                   </div>
                   <div className="pb-4 pt-0.5">
-                    <p className="text-sm font-semibold text-ink">{su.newStatus}</p>
+                    <p className="text-sm font-semibold text-ink">{statusLabel(su.newStatus)}</p>
                     <p className="text-[12px] text-ink-muted">
                       {displayActor(su.changedBy)} · {formatTimestamp(su.changedAt)}
                     </p>
@@ -214,11 +234,12 @@ function RequesterActions({
       ) : (
         <div className="animate-fade-in flex flex-wrap items-center gap-3 rounded-card border border-line bg-surface-hover px-3 py-2.5">
           <span className="text-[13px] text-ink">
-            Withdraw this referral request?
+            Withdraw this request? {RECIPIENT.name.split(' ')[0]} won’t need to do anything
+            more.
           </span>
           <div className="ml-auto flex gap-2">
             <Button variant="ghost" onClick={() => setConfirming(false)}>
-              Cancel
+              Keep it
             </Button>
             <Button
               variant="secondary"
@@ -247,7 +268,8 @@ function ReferrerActions({
   onDone: (message: string) => void
 }) {
   const { postStatusUpdate } = useApp()
-  const options = allowedTransitions(status)
+  // "No Update Received" is system-inferred only, never a manual choice.
+  const options = allowedTransitions(status).filter((s) => referrerChoice(s, ME.name))
   const [selected, setSelected] = useState<ReferralStatus | ''>('')
   const [note, setNote] = useState('')
   // FIX 1: terminal statuses (Referred / Unable to Refer) are irreversible, so
@@ -259,8 +281,7 @@ function ReferrerActions({
     return (
       <div className="mt-4 rounded-card border border-line bg-surface-hover px-3 py-2.5">
         <p className="text-[13px] text-ink-muted">
-          This request has reached a state with no further transitions in this
-          prototype.
+          Nothing more to do here. This request is closed.
         </p>
       </div>
     )
@@ -269,7 +290,7 @@ function ReferrerActions({
   const post = () => {
     if (!selected) return
     postStatusUpdate(requestId, selected, RECIPIENT.name, note)
-    onDone('Status updated')
+    onDone(`Update sent to ${ME.name.split(' ')[0]}`)
     setSelected('')
     setNote('')
     setConfirmingTerminal(false)
@@ -292,48 +313,64 @@ function ReferrerActions({
 
   return (
     <div className="mt-4 rounded-card border border-line p-3">
-      <p className="mb-2 text-[13px] font-semibold text-ink">Update status</p>
-      <div className="flex flex-wrap gap-2">
-        {options.map((opt) => (
-          <button
-            key={opt}
-            onClick={() => selectOption(opt)}
-            aria-pressed={selected === opt}
-            className={`rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors ${
-              selected === opt
-                ? 'border-accent bg-accent/5 text-accent'
-                : 'border-line text-ink hover:bg-surface-hover'
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
+      <p className="mb-2 text-[13px] font-semibold text-ink">
+        Let {ME.name.split(' ')[0]} know where things stand
+      </p>
+      <div className="space-y-2" role="radiogroup">
+        {options.map((opt) => {
+          const choice = referrerChoice(opt, ME.name)!
+          const active = selected === opt
+          return (
+            <button
+              key={opt}
+              role="radio"
+              aria-checked={active}
+              onClick={() => selectOption(opt)}
+              className={`flex w-full items-start gap-3 rounded-card border px-3 py-2.5 text-left transition-colors ${
+                active ? 'border-accent bg-accent/5' : 'border-line hover:bg-surface-hover'
+              }`}
+            >
+              <span
+                className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 ${
+                  active ? 'border-accent' : 'border-black/30'
+                }`}
+                aria-hidden
+              >
+                {active && <span className="h-2 w-2 rounded-full bg-accent" />}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-ink">{choice.label}</span>
+                <span className="block text-[12px] text-ink-muted">{choice.hint}</span>
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={2}
-        placeholder="Add a note (optional)…"
+        placeholder={`Add a note for ${ME.name.split(' ')[0]} (optional)`}
         className="mt-3 w-full resize-none rounded-card border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
       />
 
       {confirmingTerminal ? (
         <div className="animate-fade-in mt-3 flex flex-wrap items-center gap-3 rounded-card border border-line bg-surface-hover px-3 py-2.5">
           <span className="text-[13px] text-ink">
-            This status can&apos;t be changed once posted. Post {selected}?
+            You won&apos;t be able to change this afterwards. Send it?
           </span>
           <div className="ml-auto flex gap-2">
             <Button variant="ghost" onClick={() => setConfirmingTerminal(false)}>
               Cancel
             </Button>
-            <Button onClick={post}>Confirm</Button>
+            <Button onClick={post}>Send</Button>
           </div>
         </div>
       ) : (
         <div className="mt-2 flex justify-end">
           <Button onClick={handlePost} disabled={!selected}>
-            Post update
+            Send update
           </Button>
         </div>
       )}

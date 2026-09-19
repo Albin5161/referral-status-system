@@ -2,13 +2,16 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useApp } from './context/AppContext'
 import { LinkedInHeader, hasMobileChrome } from './components/LinkedInHeader'
 import { Footer } from './components/Footer'
-import { StatusNotification } from './components/StatusNotification'
+import { Onboarding } from './components/Onboarding'
+import { FeedbackForm } from './components/FeedbackForm'
 import { HomePage } from './pages/HomePage'
 import { MessagingPage } from './pages/MessagingPage'
 import { JobTrackerPage } from './pages/JobTrackerPage'
 import { ComposePage } from './pages/ComposePage'
 import { StatusPage } from './pages/StatusPage'
 import { MyJobsPage } from './pages/MyJobsPage'
+import { NotificationsPage } from './pages/NotificationsPage'
+import { FeedbackResponsesPage } from './pages/FeedbackResponsesPage'
 
 // Compose and My Jobs are requester-only places (PRD §4). If the referrer role
 // lands on them (e.g. via the switcher), redirect back to the shared messaging.
@@ -53,11 +56,15 @@ export default function App() {
               </RequesterOnly>
             }
           />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          {/* Not linked in product UI: the facilitator's view of responses */}
+          <Route path="/feedback" element={<FeedbackResponsesPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <Footer />
-      <StatusNotification />
+      <Onboarding />
+      <FeedbackForm />
     </div>
   )
 }
