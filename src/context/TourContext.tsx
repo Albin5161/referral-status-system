@@ -31,6 +31,9 @@ export interface TourStep {
   id: TourStepId
   index: number // 0-based; TOUR_STEP_COUNT when done
   text: string
+  // Where to click next: data-tour ids in priority order. The spotlight rings
+  // the first one that is visible on screen right now.
+  targets: string[]
 }
 
 export interface FeedbackInput {
@@ -76,9 +79,6 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const [onboardingDone, setOnboardingDone] = useState(() => load('tour:onboardingDone', false))
   const [outcomeSeen, setOutcomeSeen] = useState(() => load('tour:outcomeSeen', false))
-  const [feedbackPrompted, setFeedbackPrompted] = useState(() =>
-    load('tour:feedbackPrompted', false),
-  )
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(() =>
     load('tour:feedbackSubmitted', false),
   )
@@ -86,19 +86,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => save('tour:onboardingDone', onboardingDone), [onboardingDone])
   useEffect(() => save('tour:outcomeSeen', outcomeSeen), [outcomeSeen])
-  useEffect(() => save('tour:feedbackPrompted', feedbackPrompted), [feedbackPrompted])
   useEffect(() => save('tour:feedbackSubmitted', feedbackSubmitted), [feedbackSubmitted])
-
-  // Ask for feedback once, shortly after the tester lands on the final status —
-  // long enough for them to take in the screen they just reached.
-  useEffect(() => {
-    if (!outcomeSeen || feedbackPrompted) return
-    const t = window.setTimeout(() => {
-      setFeedbackPrompted(true)
-      setFeedbackOpen(true)
-    }, 1800)
-    return () => window.clearTimeout(t)
-  }, [outcomeSeen, feedbackPrompted])
 
   const finishOnboarding = useCallback(() => setOnboardingDone(true), [])
   const replayOnboarding = useCallback(() => setOnboardingDone(false), [])
@@ -139,7 +127,6 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const restartTest = useCallback(() => {
     resetPrototype()
     setOutcomeSeen(false)
-    setFeedbackPrompted(false)
     setFeedbackSubmitted(false)
     setFeedbackOpen(false)
     setOnboardingDone(false)
@@ -186,57 +173,108 @@ export function useTour(): TourState {
 }
 
 // The next thing the tester should do, derived from the shared prototype state
-// (never stored), so it stays right however the tester moves around.
+// and the current screen (never stored), so it stays right however the tester
+// moves around.
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTourStep(): TourStep {
   const { role, referralRequests, statusUpdates, seenRequestIds } = useApp()
   const { outcomeSeen } = useTour()
-  const { pathname } = useLocation()
-  const inMessaging = pathname.startsWith('/messaging')
-  const onStatus = pathname.startsWith('/status/')
+  const { pathname, search } = useLocation()
+  const on = (prefix: string) => pathname.startsWith(prefix)
 
   const toAlex = referralRequests.filter((r) => r.recipientId === RECIPIENT.id)
   const alexResponded = statusUpdates.some(
     (u) => u.changedBy === RECIPIENT.name && toAlex.some((r) => r.id === u.referralRequestId),
   )
-  const step = (id: TourStepId, index: number, text: string): TourStep => ({ id, index, text })
+  const step = (id: TourStepId, index: number, text: string, targets: string[] = []): TourStep => ({
+    id,
+    index,
+    text,
+    targets,
+  })
 
-  if (outcomeSeen) return step('done', TOUR_STEP_COUNT, "That's the whole journey. Thanks for trying it!")
+  if (outcomeSeen) {
+    // No spotlight: the tester should be free to read the result in peace.
+    return step('done', TOUR_STEP_COUNT, 'All done! Take your time with the result.')
+  }
 
+  // 1 · Ask Alex for a referral — guided screen by screen, for both entry points.
   if (toAlex.length === 0) {
-    return step(
-      'ask',
-      0,
-      role === 'requester'
-        ? 'Ask Alex Johnson for a referral, from Messaging or your Job Tracker.'
-        : 'Switch to Requester in the top bar, then ask Alex Johnson for a referral.',
-    )
+    if (role === 'referrer') {
+      return step('ask', 0, 'Switch to Requester in the top bar to start as Albin.', ['role-requester'])
+    }
+    if (on('/jobs')) {
+      return step(
+        'ask',
+        0,
+        'Find the Google role, tap Ask for referral, then choose Alex Johnson.',
+        ['pick-u2', 'ask-job1'],
+      )
+    }
+    if (on('/compose')) {
+      const lean = search.includes('job=')
+      return step(
+        'ask',
+        0,
+        lean
+          ? 'Read the message, attach your resume, then review and send it.'
+          : 'Keep Referral Request selected, attach the job and your resume, then review and send.',
+        ['attach-job', 'attach-resume', 'send-request', 'review-request'],
+      )
+    }
+    if (on('/messaging')) {
+      return step('ask', 0, 'Open your chat with Alex Johnson and tap Compose to ask for a referral.', [
+        'compose-btn',
+        'convo-u2',
+      ])
+    }
+    return step('ask', 0, 'Ask Alex Johnson for a referral. Start from Messaging or your Job Tracker.', [
+      'home-from-jobs',
+      'home-from-messaging',
+      'nav-jobs',
+    ])
   }
 
   if (!alexResponded) {
+    // 2 · Become Alex.
     if (role === 'requester') {
-      return step('switch-to-referrer', 1, 'Request sent. Now switch to Referrer in the top bar to see Alex’s side.')
+      return step('switch-to-referrer', 1, 'Request sent! Now switch to Referrer in the top bar to see Alex’s side.', [
+        'role-referrer',
+      ])
     }
+    // 3 · Find the request through the badge.
     const unseen = toAlex.some((r) => !seenRequestIds.includes(r.id))
     if (unseen) {
-      return step(
-        'open-messaging',
-        2,
-        inMessaging
-          ? 'Open your conversation with Albin to see the request.'
-          : 'You’re Alex now. Tap Messaging: the red badge is Albin’s new request.',
-      )
+      return on('/messaging')
+        ? step('open-messaging', 2, 'Open your conversation with Albin to see the request.', ['convo-u2'])
+        : step('open-messaging', 2, 'You’re Alex now. Tap Messaging: the red badge is Albin’s new request.', [
+            'nav-messaging',
+          ])
     }
-    return step(
-      'update-status',
-      3,
-      onStatus
-        ? 'Pick the option that fits and send your update to Albin.'
-        : 'Open the Referral Request card and update its status.',
-    )
+    // 4 · Respond.
+    if (on('/status/')) {
+      return step('update-status', 3, 'Pick the option that fits, then send your update to Albin.', [
+        'send-update',
+        'referrer-options',
+      ])
+    }
+    return step('update-status', 3, 'Tap View Referral Status on Albin’s request to respond.', [
+      'view-status',
+      'convo-u2',
+      'nav-messaging',
+    ])
   }
 
-  return role === 'referrer'
-    ? step('switch-back', 4, 'Status updated. Switch back to Requester to see what Albin sees.')
-    : step('see-outcome', 5, 'Alex replied. Open Notifications (the bell) to see the update.')
+  // 5 · Back to Albin.
+  if (role === 'referrer') {
+    return step('switch-back', 4, 'Update sent! Switch back to Requester to see what Albin sees.', [
+      'role-requester',
+    ])
+  }
+  // 6 · See the update where Albin would.
+  return on('/notifications')
+    ? step('see-outcome', 5, 'Tap Alex’s update to see the new status.', ['notification-new'])
+    : step('see-outcome', 5, 'Alex replied. Open Notifications (the bell) to see the update.', [
+        'nav-notifications',
+      ])
 }

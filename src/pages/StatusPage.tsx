@@ -316,7 +316,7 @@ function ReferrerActions({
       <p className="mb-2 text-[13px] font-semibold text-ink">
         Let {ME.name.split(' ')[0]} know where things stand
       </p>
-      <div className="space-y-2" role="radiogroup">
+      <div className="space-y-2" role="radiogroup" data-tour={selected ? undefined : 'referrer-options'}>
         {options.map((opt) => {
           const choice = referrerChoice(opt, ME.name)!
           const active = selected === opt
@@ -364,12 +364,12 @@ function ReferrerActions({
             <Button variant="ghost" onClick={() => setConfirmingTerminal(false)}>
               Cancel
             </Button>
-            <Button onClick={post}>Send</Button>
+            <Button onClick={post} data-tour="send-update">Send</Button>
           </div>
         </div>
       ) : (
         <div className="mt-2 flex justify-end">
-          <Button onClick={handlePost} disabled={!selected}>
+          <Button onClick={handlePost} disabled={!selected} data-tour={selected ? 'send-update' : undefined}>
             Send update
           </Button>
         </div>

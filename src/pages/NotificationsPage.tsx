@@ -32,12 +32,13 @@ export function NotificationsPage() {
           Notifications
         </h1>
         <ul className="divide-y divide-line">
-          {items.map((n) => {
+          {items.map((n, idx) => {
             const request = referralRequests.find((r) => r.id === n.referralRequestId)
             const note = statusUpdates.find((u) => u.id === n.statusUpdateId)?.note
             return (
               <li key={n.id}>
                 <button
+                  data-tour={!n.read && idx === items.findIndex((x) => !x.read) ? 'notification-new' : undefined}
                   onClick={() => {
                     markNotificationRead(n.id)
                     navigate(`/status/${n.referralRequestId}`)

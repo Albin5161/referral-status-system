@@ -42,6 +42,7 @@ export function ReferralRequestCard({ request }: { request: ReferralRequest }) {
       </div>
       <Link
         to={`/status/${request.id}`}
+        data-tour="view-status"
         className="group flex items-center justify-between border-t border-line px-3.5 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent/5"
       >
         View Referral Status

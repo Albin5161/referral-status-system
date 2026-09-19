@@ -86,6 +86,7 @@ export function LinkedInHeader() {
           </label>
           <Link
             to="/messaging"
+            data-tour="nav-messaging"
             aria-label={messagingUnread ? `Messaging, ${messagingUnread} unread` : 'Messaging'}
             className="relative shrink-0 rounded-full p-1 text-ink-muted hover:text-ink"
           >
@@ -124,6 +125,7 @@ export function LinkedInHeader() {
             {role === 'requester' ? (
               <NavItem
                 to="/jobs"
+                tourId="nav-jobs"
                 active={isActive('/jobs')}
                 icon={<JobsFill />}
                 label="Jobs"
@@ -133,6 +135,7 @@ export function LinkedInHeader() {
             )}
             <NavItem
               to="/messaging"
+              tourId="nav-messaging"
               active={isActive('/messaging')}
               icon={<MessagingFill />}
               label="Messaging"
@@ -141,6 +144,7 @@ export function LinkedInHeader() {
             />
             <NavItem
               to="/notifications"
+              tourId="nav-notifications"
               active={isActive('/notifications')}
               icon={<BellFill />}
               label="Notifications"
@@ -198,8 +202,8 @@ function MobileTabBar({
     { label: 'Home', Icon: HomeFill, to: '/' },
     { label: 'My Network', Icon: NetworkFill },
     { label: 'Post', Icon: PostFill },
-    { label: 'Notifications', Icon: BellFill, to: '/notifications', badge: notificationsUnread, pulse: pulseBell },
-    { label: 'Jobs', Icon: JobsFill, to: role === 'requester' ? '/jobs' : undefined },
+    { label: 'Notifications', Icon: BellFill, to: '/notifications', badge: notificationsUnread, pulse: pulseBell, tour: 'nav-notifications' },
+    { label: 'Jobs', Icon: JobsFill, to: role === 'requester' ? '/jobs' : undefined, tour: 'nav-jobs' },
   ]
 
   return (
@@ -207,7 +211,7 @@ function MobileTabBar({
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      {tabs.map(({ label, Icon, to, badge, pulse }) => {
+      {tabs.map(({ label, Icon, to, badge, pulse, tour }) => {
         const active = to ? isActive(to) : false
         const inner = (
           <>
@@ -225,7 +229,7 @@ function MobileTabBar({
           active ? 'text-ink' : 'text-ink-muted'
         }`
         return to ? (
-          <Link key={label} to={to} className={cls} aria-current={active ? 'page' : undefined}>
+          <Link key={label} to={to} data-tour={tour} className={cls} aria-current={active ? 'page' : undefined}>
             {inner}
           </Link>
         ) : (
@@ -245,7 +249,9 @@ function NavItem({
   label,
   badge,
   pulse,
+  tourId,
 }: {
+  tourId?: string
   to: string
   active: boolean
   icon: React.ReactNode
@@ -256,6 +262,7 @@ function NavItem({
   return (
     <Link
       to={to}
+      data-tour={tourId}
       className={`relative flex min-w-[72px] flex-col items-center justify-center border-b-2 px-2 pt-1 text-[11px] transition-colors ${
         active
           ? 'border-ink text-ink'

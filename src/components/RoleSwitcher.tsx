@@ -20,6 +20,7 @@ export function RoleSwitcher() {
           navigate('/')
         }}
         aria-pressed={active}
+        data-tour={`role-${value}`}
         className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
           active ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
         }`}

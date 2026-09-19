@@ -101,6 +101,7 @@ export function MessagingPage() {
             {rows.map(({ member, name, preview, lastAt, unread }) => (
               <ConvoRow
                 key={member.id}
+                tourId={`convo-${member.id}`}
                 name={name}
                 preview={preview}
                 unread={unread}
@@ -131,8 +132,10 @@ function ConvoRow({
   active,
   desktopOnlyActive = false,
   unread = false,
+  tourId,
   onClick,
 }: {
+  tourId?: string
   name: string
   preview: string
   unread?: boolean
@@ -145,6 +148,7 @@ function ConvoRow({
     <li>
       <button
         onClick={onClick}
+        data-tour={tourId}
         className={`flex w-full items-start gap-3 border-b border-line border-l-2 px-3 py-3 text-left transition-colors ${
           active
             ? 'border-l-accent bg-[#eef3f8]'

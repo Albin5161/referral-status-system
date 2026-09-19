@@ -66,6 +66,7 @@ export function HomePage() {
           <div className="grid gap-2 px-2 sm:grid-cols-2 md:px-0">
             <Link
               to="/messaging"
+              data-tour="home-from-messaging"
               className="flex items-center gap-3 rounded-card border border-accent/40 bg-accent/5 px-4 py-3 hover:bg-accent/10"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15 text-accent">
@@ -82,6 +83,7 @@ export function HomePage() {
             </Link>
             <Link
               to="/jobs"
+              data-tour="home-from-jobs"
               className="flex items-center gap-3 rounded-card border border-accent/40 bg-accent/5 px-4 py-3 hover:bg-accent/10"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15 text-accent">

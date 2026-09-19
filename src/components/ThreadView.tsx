@@ -69,6 +69,7 @@ export function ThreadView({ peerId, onBack }: { peerId: string; onBack?: () => 
         {role === 'requester' && peerId === RECIPIENT.id && (
           <button
             onClick={() => navigate('/compose')}
+            data-tour="compose-btn"
             className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-accent-hover"
           >
             <Plus size={15} />

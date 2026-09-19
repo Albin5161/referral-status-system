@@ -82,6 +82,7 @@ function JobRow({ job, onAsk }: { job: TrackedJob; onAsk: () => void }) {
       {hasConnections ? (
         <button
           onClick={onAsk}
+          data-tour={`ask-${job.id}`}
           className="ml-[60px] inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent sm:ml-0 px-3.5 py-1.5 text-[13px] font-semibold text-accent transition-colors hover:bg-accent/5"
         >
           <UserPlus size={15} />
@@ -149,6 +150,7 @@ function ConnectionPicker({
             <li key={c.id}>
               <button
                 onClick={() => choose(c.id)}
+                data-tour={`pick-${c.id}`}
                 className="flex w-full items-center gap-3 rounded-card px-2 py-2 text-left hover:bg-surface-hover"
               >
                 <Avatar name={c.name} size={40} />

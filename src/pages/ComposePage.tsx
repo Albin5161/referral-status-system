@@ -219,6 +219,7 @@ export function ComposePage() {
                   </div>
                 ) : (
                   <button
+                    data-tour="attach-job"
                     onClick={() => {
                       setJobAttached(true)
                       setValidationError(null)
@@ -267,6 +268,7 @@ export function ComposePage() {
                   </div>
                 ) : (
                   <button
+                    data-tour="attach-resume"
                     onClick={() => {
                       setResumeAttached(true)
                       setResumeError(false)
@@ -289,6 +291,7 @@ export function ComposePage() {
 
             <div className="flex justify-end pt-1">
               <Button
+                data-tour="review-request"
                 onClick={handleContinue}
                 disabled={!lean && type === 'message' && !message.trim()}
               >
@@ -323,7 +326,9 @@ export function ComposePage() {
               <Button variant="ghost" onClick={() => setStep('compose')}>
                 Edit
               </Button>
-              <Button onClick={handleConfirm}>Send request</Button>
+              <Button data-tour="send-request" onClick={handleConfirm}>
+                Send request
+              </Button>
             </div>
           </div>
         )}

@@ -58,11 +58,38 @@ export default {
           from: { opacity: '0', transform: 'translateY(6px) scale(0.98)' },
           to: { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
+        // Guided-test spotlight: ring appears, then breathes outward.
+        spotIn: {
+          from: { opacity: '0', transform: 'scale(1.15)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        spotPulse: {
+          '0%': { boxShadow: '0 0 0 0 rgba(10,102,194,0.45)' },
+          '100%': { boxShadow: '0 0 0 12px rgba(10,102,194,0)' },
+        },
+        nudge: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(3px)' },
+        },
+        nudgeX: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '50%': { transform: 'translateX(-3px)' },
+        },
+        stepDone: {
+          '0%': { opacity: '0', transform: 'scale(0.6)' },
+          '60%': { opacity: '1', transform: 'scale(1.15)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out both',
         'slide-up': 'slideUp 0.34s cubic-bezier(0.2,0.7,0.3,1) both',
         'pop-in': 'popIn 0.3s cubic-bezier(0.2,0.8,0.3,1) both',
+        'spot-pulse':
+          'spotIn 0.35s cubic-bezier(0.2,0.8,0.3,1) both, spotPulse 1.6s ease-out 0.35s infinite',
+        nudge: 'nudge 1.2s ease-in-out infinite',
+        'nudge-x': 'nudgeX 1.2s ease-in-out infinite',
+        'step-done': 'stepDone 0.45s cubic-bezier(0.2,0.8,0.3,1) both',
       },
       fontFamily: {
         sans: [
