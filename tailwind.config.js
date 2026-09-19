@@ -13,8 +13,11 @@ export default {
         // Neutral surface / text scale inspired by LinkedIn's dense functional UI.
         ink: {
           DEFAULT: 'rgba(0,0,0,0.90)', // primary text
-          muted: 'rgba(0,0,0,0.60)', // secondary / timestamps
-          faint: 'rgba(0,0,0,0.45)',
+          // Solid greys so contrast holds on every background (matches Figma tokens
+          // gray/600 and gray/500). muted: 7:1 on white; faint: 5.1:1 on white,
+          // 4.56:1 on the warm page grey. Both pass WCAG AA for body text.
+          muted: '#595959', // secondary / timestamps
+          faint: '#6E6E6E',
         },
         surface: {
           DEFAULT: '#ffffff',
