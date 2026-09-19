@@ -34,6 +34,9 @@ export interface TourStep {
   // Where to click next: data-tour ids in priority order. The spotlight rings
   // the first one that is visible on screen right now.
   targets: string[]
+  // A genuine choice: ring EVERY visible target equally instead of picking one,
+  // so the guide never steers testers towards a particular path.
+  choice?: boolean
 }
 
 export interface FeedbackInput {
@@ -44,6 +47,7 @@ export interface FeedbackInput {
 }
 
 export interface FeedbackEntry extends FeedbackInput {
+  entryPoint: string // 'Messaging' | 'Job Tracker' | '' if they never sent a request
   completedJourney: boolean
   viewport: string
   userAgent: string
@@ -155,6 +159,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
         useful,
         usefulWhy: usefulWhy.trim(),
         improve: improve.trim(),
+        entryPoint: load('tour:entryPoint', ''),
         completedJourney: outcomeSeen,
         viewport: `${window.innerWidth}x${window.innerHeight}`,
         userAgent: navigator.userAgent,
@@ -289,11 +294,14 @@ export function useTourStep(): TourStep {
         'convo-u2',
       ])
     }
-    return step('ask', 0, 'Ask Alex Johnson for a referral. Start from Messaging or your Job Tracker.', [
-      'home-from-jobs',
-      'home-from-messaging',
-      'nav-jobs',
-    ])
+    // Two equal entry points: which one testers pick is itself a finding.
+    return {
+      ...step('ask', 0, 'Ask Alex Johnson for a referral, whichever way feels natural to you.', [
+        'home-from-messaging',
+        'home-from-jobs',
+      ]),
+      choice: true,
+    }
   }
 
   if (!alexResponded) {

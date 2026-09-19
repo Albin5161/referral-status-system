@@ -21,6 +21,7 @@ export function FeedbackResponsesPage() {
       'useful',
       'usefulWhy',
       'improve',
+      'entryPoint',
       'completedJourney',
       'viewport',
     ]
@@ -69,6 +70,7 @@ export function FeedbackResponsesPage() {
               <span className="font-semibold text-ink">{e.rating}/5</span>
               <span>Useful: {e.useful === 'yes' ? 'Yes' : e.useful === 'no' ? 'No' : '–'}</span>
               <span>{e.completedJourney ? 'Finished the task' : 'Didn’t finish'}</span>
+              {e.entryPoint && <span>via {e.entryPoint}</span>}
               <span className="ml-auto">{new Date(e.submittedAt).toLocaleString()}</span>
             </div>
             {e.usefulWhy && <Answer q={e.useful === 'no' ? 'Why not useful' : 'Why useful'} a={e.usefulWhy} />}

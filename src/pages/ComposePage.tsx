@@ -21,6 +21,7 @@ import {
 } from '../sampleData'
 import { Avatar } from '../components/Avatar'
 import { Button } from '../components/Button'
+import { save } from '../storage'
 
 type MessageType = 'message' | 'referral'
 type Step = 'compose' | 'review' | 'creating' | 'error'
@@ -91,6 +92,8 @@ export function ComposePage() {
         },
         { simulateFailure },
       )
+      // Test insight: which entry point this tester chose (sent with their feedback).
+      save('tour:entryPoint', lean ? 'Job Tracker' : 'Messaging')
       navigate(`/messaging?c=${recipient.id}`) // card shows at Pending in that thread
     } catch {
       setStep('error')
