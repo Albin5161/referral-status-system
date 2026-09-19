@@ -90,9 +90,14 @@ export function LinkedInHeader() {
         </div>
 
         {/* Prototype-only role switcher (PRD §4) */}
-        <div className="ml-1 shrink-0 border-l border-line pl-2">
+        <div className="ml-1 hidden shrink-0 border-l border-line pl-2 sm:block">
           <RoleSwitcher />
         </div>
+      </div>
+
+      {/* Phones: the switcher gets its own row so the nav bar fits the screen */}
+      <div className="flex items-center justify-end border-t border-line px-4 py-1.5 sm:hidden">
+        <RoleSwitcher />
       </div>
     </header>
   )

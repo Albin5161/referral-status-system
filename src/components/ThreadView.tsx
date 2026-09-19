@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Image, MessageSquare, Paperclip, Plus, Send, Smile } from 'lucide-react'
+import { ArrowLeft, Image, MessageSquare, Paperclip, Plus, Send, Smile } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { ME, RECIPIENT, memberById } from '../sampleData'
 import { Avatar } from './Avatar'
@@ -13,7 +13,7 @@ type TimelineItem =
 
 // One 1:1 conversation, scoped by peerId. Rendered inside the Messaging right
 // pane. Referral requests are filtered to those addressed to this peer.
-export function ThreadView({ peerId }: { peerId: string }) {
+export function ThreadView({ peerId, onBack }: { peerId: string; onBack?: () => void }) {
   const { role, threadMessages, referralRequests, sendMessage } = useApp()
   const navigate = useNavigate()
   const [draft, setDraft] = useState('')
@@ -48,10 +48,20 @@ export function ThreadView({ peerId }: { peerId: string }) {
     <div className="flex h-full flex-col">
       {/* Conversation header */}
       <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+        {/* Phones: the thread is its own screen, so it needs a way back to the list */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            aria-label="Back to conversations"
+            className="-ml-1 rounded-full p-1 text-ink-muted hover:bg-black/5 hover:text-ink md:hidden"
+          >
+            <ArrowLeft size={18} />
+          </button>
+        )}
         <Avatar name={other?.name ?? ''} size={40} />
-        <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-ink">{other?.name}</p>
-          <p className="text-[12px] text-ink-muted">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold text-ink">{other?.name}</p>
+          <p className="truncate text-[12px] text-ink-muted">
             {other?.id === ME.id
               ? 'UX Designer'
               : other?.headline || other?.degree || 'Connection'}
@@ -61,10 +71,11 @@ export function ThreadView({ peerId }: { peerId: string }) {
         {role === 'requester' && peerId === RECIPIENT.id && (
           <button
             onClick={() => navigate('/compose')}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-accent-hover"
+            className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-accent-hover"
           >
             <Plus size={15} />
-            Compose new message
+            <span className="sm:hidden">Compose</span>
+            <span className="hidden sm:inline">Compose new message</span>
           </button>
         )}
       </div>

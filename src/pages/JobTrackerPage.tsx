@@ -43,12 +43,13 @@ function JobRow({ job, onAsk }: { job: TrackedJob; onAsk: () => void }) {
   const hasConnections = connections.length > 0
 
   return (
-    <li className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-hover">
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition-colors hover:bg-surface-hover">
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded bg-black/[0.04] text-ink-muted">
         <Briefcase size={20} />
       </span>
 
-      <div className="min-w-0 flex-1">
+      {/* Phones: text takes the full row and the action wraps underneath it */}
+      <div className="min-w-0 flex-1 basis-[calc(100%-56px)] sm:basis-auto">
         <p className="truncate text-[15px] font-semibold text-ink">{job.title}</p>
         <p className="truncate text-[13px] text-ink-muted">
           {job.company} · {job.trackStatus}
@@ -77,14 +78,14 @@ function JobRow({ job, onAsk }: { job: TrackedJob; onAsk: () => void }) {
       {hasConnections ? (
         <button
           onClick={onAsk}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent px-3.5 py-1.5 text-[13px] font-semibold text-accent transition-colors hover:bg-accent/5"
+          className="ml-14 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent sm:ml-0 px-3.5 py-1.5 text-[13px] font-semibold text-accent transition-colors hover:bg-accent/5"
         >
           <UserPlus size={15} />
           Ask for referral
         </button>
       ) : (
         <span
-          className="inline-flex shrink-0 cursor-not-allowed items-center rounded-full border border-line px-3.5 py-1.5 text-[12px] font-medium text-ink-faint"
+          className="ml-14 inline-flex shrink-0 cursor-not-allowed items-center sm:ml-0 rounded-full border border-line px-3.5 py-1.5 text-[12px] font-medium text-ink-faint"
           title={`No connections at ${job.company} yet.`}
         >
           No connections at {job.company} yet.

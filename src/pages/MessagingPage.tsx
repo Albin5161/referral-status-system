@@ -36,24 +36,30 @@ export function MessagingPage() {
     return { member: c, preview, lastAt }
   }).sort((a, b) => b.lastAt - a.lastAt)
 
-  const selected = params.get('c') ?? RECIPIENT.id
-  const select = (id: string) => setParams({ c: id }, { replace: true })
+  // ?c= is the open conversation. Without it, desktop defaults to Alex while
+  // phones show the list first and open a thread as its own screen.
+  const openId = params.get('c')
+  const selected = openId ?? RECIPIENT.id
+  const select = (id: string) => setParams({ c: id })
+  const backToList = () => setParams({})
 
   // As the referrer, opening a conversation marks its incoming referral requests
   // as seen — which clears the Messaging badge (inbox behaviour).
   useEffect(() => {
     if (role !== 'referrer') return
+    // On phones nothing is open until a conversation is tapped.
+    if (!openId && !window.matchMedia('(min-width: 768px)').matches) return
     const ids = referralRequests
       .filter((r) => r.recipientId === selected)
       .map((r) => r.id)
     markRequestsSeen(ids)
-  }, [role, selected, referralRequests, markRequestsSeen])
+  }, [role, openId, selected, referralRequests, markRequestsSeen])
 
   return (
     <div className="animate-fade-in mx-auto max-w-6xl px-4 py-6">
       <div className="grid h-[calc(100vh-140px)] min-h-[520px] grid-cols-1 overflow-hidden rounded-card border border-line bg-surface shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         {/* Conversation list */}
-        <div className="flex min-h-0 flex-col border-r border-line">
+        <div className={`min-h-0 flex-col border-r border-line ${openId ? 'hidden md:flex' : 'flex'}`}>
           <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
             <h1 className="text-[16px] font-semibold text-ink">Messaging</h1>
             <div className="relative ml-auto hidden items-center sm:flex">
@@ -90,8 +96,8 @@ export function MessagingPage() {
         </div>
 
         {/* Right pane — the selected conversation */}
-        <div className="min-h-0">
-          <ThreadView peerId={selected} />
+        <div className={`min-h-0 ${openId ? 'block' : 'hidden md:block'}`}>
+          <ThreadView peerId={selected} onBack={backToList} />
         </div>
       </div>
     </div>
