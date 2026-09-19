@@ -6,6 +6,7 @@ import {
   ChevronDown,
   FileText,
   Globe,
+  Heart,
   Image as ImageIcon,
   Info,
   MessageSquare,
@@ -104,9 +105,9 @@ export function HomePage() {
             </div>
           </div>
           <div className="mt-2 flex items-center justify-around">
-            <FeedAction icon={<Video size={18} className="text-emerald-600" />} label="Video" />
-            <FeedAction icon={<ImageIcon size={18} className="text-sky-600" />} label="Photo" />
-            <FeedAction icon={<FileText size={18} className="text-amber-600" />} label="Write article" />
+            <FeedAction icon={<Video size={18} className="text-feed-video" />} label="Video" />
+            <FeedAction icon={<ImageIcon size={18} className="text-feed-photo" />} label="Photo" />
+            <FeedAction icon={<FileText size={18} className="text-feed-article" />} label="Write article" />
           </div>
         </div>
 
@@ -287,8 +288,14 @@ function FeedPost({
       {/* Social proof */}
       <div className="mx-3 flex items-center justify-between gap-2 border-b border-line py-2 text-[12px] text-ink-muted">
         <span className="flex min-w-0 items-center gap-1">
-          <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-accent text-white">
-            <ThumbsUp size={9} />
+          {/* LinkedIn reaction cluster: like + love, overlapping */}
+          <span className="flex shrink-0 -space-x-1" aria-hidden>
+            <span className="grid h-4 w-4 place-items-center rounded-full bg-reaction-like text-white ring-1 ring-surface">
+              <ThumbsUp size={9} />
+            </span>
+            <span className="grid h-4 w-4 place-items-center rounded-full bg-reaction-love text-white ring-1 ring-surface">
+              <Heart size={9} fill="currentColor" />
+            </span>
           </span>
           <span className="truncate">{reactions}</span>
         </span>
@@ -297,7 +304,7 @@ function FeedPost({
         </span>
       </div>
 
-      <div className="flex items-center justify-around px-1 py-1 text-ink-muted">
+      <div className="flex items-center justify-around px-1 py-1 text-ink-action">
         <span className="flex items-center gap-0.5 md:hidden" aria-hidden>
           <Avatar name={viewer} size={24} />
           <ChevronDown size={14} />

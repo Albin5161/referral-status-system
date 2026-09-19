@@ -228,7 +228,7 @@ export function ComposePage() {
                   </button>
                 )}
                 {validationError && (
-                  <p className="mt-2 text-[13px] font-medium text-red-600">
+                  <p className="mt-2 text-[13px] font-medium text-danger">
                     {validationError}
                   </p>
                 )}
@@ -325,7 +325,7 @@ export function ComposePage() {
 
         {step === 'error' && (
           <div className="space-y-4 p-4">
-            <p className="text-sm font-medium text-red-600">
+            <p className="text-sm font-medium text-danger">
               Couldn&apos;t create your Referral Request.
             </p>
             <div className="rounded-card border border-line bg-surface-hover px-3 py-2.5">

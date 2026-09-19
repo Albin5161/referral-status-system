@@ -10,21 +10,32 @@ export default {
           hover: '#004182',
           disabled: '#7FA9D4',
         },
-        // Neutral surface / text scale inspired by LinkedIn's dense functional UI.
+        // LinkedIn's text scale, measured from the iOS app (see Figma Colour page).
+        // #666 is 5.7:1 on white and 4.5:1 on the app canvas, so AA holds.
         ink: {
-          DEFAULT: 'rgba(0,0,0,0.90)', // primary text
-          // Solid greys so contrast holds on every background (matches Figma tokens
-          // gray/600 and gray/500). muted: 7:1 on white; faint: 5.1:1 on white,
-          // 4.56:1 on the warm page grey. Both pass WCAG AA for body text.
-          muted: '#595959', // secondary / timestamps
-          faint: '#6E6E6E',
+          DEFAULT: '#191919', // rgba(0,0,0,.9) on white: primary text
+          muted: '#666666', // rgba(0,0,0,.6): secondary text, timestamps
+          faint: '#666666', // LinkedIn uses the same .6 grey for meta text
+          action: '#404040', // rgba(0,0,0,.75): post action icons and labels
         },
         surface: {
           DEFAULT: '#ffffff',
-          page: '#f4f2ee', // LinkedIn-style warm gray canvas
+          page: '#f4f2ee', // LinkedIn web canvas
+          app: '#e9e5df', // LinkedIn iOS canvas (gaps between feed posts)
           hover: '#f3f6f8',
         },
-        line: 'rgba(0,0,0,0.12)',
+        line: 'rgba(0,0,0,0.08)',
+        danger: '#CB112D', // LinkedIn notification badge / error red
+        reaction: {
+          like: '#378FE9',
+          love: '#DF704D',
+        },
+        // "Start a post" action tints on LinkedIn web
+        feed: {
+          video: '#5F9B41',
+          photo: '#378FE9',
+          article: '#E06847',
+        },
       },
       borderRadius: {
         card: '8px',

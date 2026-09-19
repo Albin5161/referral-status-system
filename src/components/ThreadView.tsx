@@ -19,8 +19,6 @@ export function ThreadView({ peerId, onBack }: { peerId: string; onBack?: () => 
   const [draft, setDraft] = useState('')
 
   const peer = memberById(peerId)
-  // The requester speaks as ME; the referrer speaks as the peer.
-  const meId = role === 'requester' ? ME.id : peerId
   const other = role === 'requester' ? peer : ME
 
   const items: TimelineItem[] = [
@@ -55,7 +53,7 @@ export function ThreadView({ peerId, onBack }: { peerId: string; onBack?: () => 
             aria-label="Back to conversations"
             className="-ml-1 rounded-full p-1 text-ink-muted hover:bg-black/5 hover:text-ink md:hidden"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={22} />
           </button>
         )}
         <Avatar name={other?.name ?? ''} size={40} />
@@ -81,7 +79,7 @@ export function ThreadView({ peerId, onBack }: { peerId: string; onBack?: () => 
       </div>
 
       {/* Timeline */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {items.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
             <span className="grid h-12 w-12 place-items-center rounded-full bg-black/[0.04] text-ink-faint">
@@ -95,7 +93,7 @@ export function ThreadView({ peerId, onBack }: { peerId: string; onBack?: () => 
             </p>
           </div>
         )}
-        {items.map((item) => {
+        {items.map((item, index) => {
           if (item.kind === 'request') {
             return (
               <ReferralRequestCard
@@ -104,39 +102,65 @@ export function ThreadView({ peerId, onBack }: { peerId: string; onBack?: () => 
               />
             )
           }
-          const mine = item.senderId === meId
+          // LinkedIn messages are flat, not bubbles: a sender header (avatar, name,
+          // time) followed by the text. Back-to-back messages from the same person
+          // within 10 minutes share one header.
+          const prev = items[index - 1]
+          const grouped =
+            prev?.kind === 'message' &&
+            prev.senderId === item.senderId &&
+            new Date(item.at).getTime() - new Date(prev.at).getTime() < 10 * 60 * 1000
           const senderName = memberById(item.senderId)?.name ?? ''
           return (
-            <div
-              key={item.id}
-              className={`flex gap-2 ${mine ? 'flex-row-reverse' : 'flex-row'}`}
-            >
-              <Avatar name={senderName} size={32} />
-              <div className={`max-w-[75%] ${mine ? 'items-end' : 'items-start'}`}>
-                <div
-                  className={`rounded-2xl px-3 py-2 text-sm ${
-                    mine
-                      ? 'rounded-tr-sm bg-accent/10 text-ink'
-                      : 'rounded-tl-sm bg-black/[0.05] text-ink'
-                  }`}
-                >
-                  {item.body}
-                </div>
-                <p
-                  className={`mt-0.5 text-[11px] text-ink-faint ${
-                    mine ? 'text-right' : 'text-left'
-                  }`}
-                >
-                  {formatTimestamp(item.at)}
-                </p>
+            <div key={item.id} className={`flex gap-2 ${grouped ? '-mt-2' : ''}`}>
+              {grouped ? (
+                <span className="w-8 shrink-0" aria-hidden />
+              ) : (
+                <Avatar name={senderName} size={32} />
+              )}
+              <div className="min-w-0 flex-1">
+                {!grouped && (
+                  <p className="text-sm leading-5">
+                    <span className="font-semibold text-ink">{senderName}</span>
+                    <span className="text-[12px] text-ink-muted"> · {formatTimestamp(item.at)}</span>
+                  </p>
+                )}
+                <p className="whitespace-pre-wrap text-sm leading-5 text-ink">{item.body}</p>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Reply box */}
-      <div className="border-t border-line px-3 py-2.5">
+      {/* Reply box. Phones: LinkedIn app single row (attach, field, send). */}
+      <div className="flex items-center gap-2 border-t border-line px-3 py-2 md:hidden">
+        <span className="text-ink-muted" aria-hidden>
+          <Paperclip size={22} />
+        </span>
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') submitDraft()
+          }}
+          placeholder="Write a message…"
+          aria-label="Write a message"
+          className="min-w-0 flex-1 rounded bg-surface-hover px-3 py-2 text-[15px] outline-none"
+        />
+        <button
+          onClick={submitDraft}
+          disabled={!draft.trim()}
+          aria-label="Send"
+          className={`rounded-full p-1.5 transition-colors ${
+            draft.trim() ? 'text-accent hover:bg-accent/10' : 'text-ink-muted/50'
+          }`}
+        >
+          <Send size={22} />
+        </button>
+      </div>
+
+      {/* Tablet and desktop: LinkedIn web composer */}
+      <div className="hidden border-t border-line px-3 py-2.5 md:block">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

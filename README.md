@@ -5,8 +5,9 @@ request a referral through their network and follow its status transparently,
 without repeatedly nudging the referrer.
 
 > **Concept prototype — not affiliated with or endorsed by LinkedIn.**
-> No LinkedIn logo, wordmark, or trademark assets are used. The interface is
-> closely *inspired by* LinkedIn's real UI with a text-based identity mark only.
+> Built for a portfolio demo only. It uses the LinkedIn logo, colours and system
+> font, with mobile patterns matched to the LinkedIn iOS app (via Mobbin), so the
+> concept can be judged in context. The in-app footer keeps the disclaimer visible.
 
 ## Stack
 

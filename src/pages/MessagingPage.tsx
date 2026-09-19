@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { PenSquare, Search } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, PenSquare, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { CONNECTIONS, ME, RECIPIENT } from '../sampleData'
 import { deriveCurrentStatus } from '../stateMachine'
@@ -57,16 +57,25 @@ export function MessagingPage() {
 
   return (
     <div className="animate-fade-in mx-auto max-w-6xl md:px-4 md:py-6">
-      <div className="grid h-[calc(100dvh-156px)] min-h-[400px] grid-cols-1 overflow-hidden border-b border-line bg-surface md:h-[calc(100vh-140px)] md:min-h-[520px] md:rounded-card md:border md:shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+      <div className="grid h-[calc(100dvh-33px)] min-h-[400px] grid-cols-1 overflow-hidden bg-surface md:h-[calc(100vh-140px)] md:min-h-[520px] md:rounded-card md:border md:shadow-card md:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         {/* Conversation list */}
         <div className={`min-h-0 flex-col border-r border-line ${openId ? 'hidden md:flex' : 'flex'}`}>
           <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
-            <h1 className="text-[16px] font-semibold text-ink">Messaging</h1>
-            <div className="relative ml-auto hidden items-center sm:flex">
-              <Search size={14} className="pointer-events-none absolute left-2 text-ink-muted" />
+            {/* Phones: LinkedIn app inbox header (back, search, compose) */}
+            <Link
+              to="/"
+              aria-label="Back to Home"
+              className="-ml-1 rounded-full p-1 text-ink-muted hover:bg-black/5 hover:text-ink md:hidden"
+            >
+              <ArrowLeft size={22} />
+            </Link>
+            <h1 className="sr-only text-[16px] font-semibold text-ink md:not-sr-only">Messaging</h1>
+            <div className="relative flex min-w-0 flex-1 items-center md:ml-auto md:flex-none">
+              <Search size={16} className="pointer-events-none absolute left-2.5 text-ink-muted" />
               <input
                 placeholder="Search messages"
-                className="w-40 rounded bg-[#edf3f8] py-1.5 pl-7 pr-2 text-[13px] outline-none placeholder:text-ink-muted"
+                aria-label="Search messages"
+                className="w-full rounded bg-[#edf3f8] py-1.5 pl-8 pr-2 text-[15px] outline-none placeholder:text-ink-muted md:w-40 md:text-[13px]"
               />
             </div>
             {role === 'requester' && (
@@ -76,7 +85,7 @@ export function MessagingPage() {
                 title="Ask for a referral from your Job Tracker"
                 className="rounded-full p-1.5 text-ink-muted hover:bg-black/5 hover:text-ink"
               >
-                <PenSquare size={18} />
+                <PenSquare size={20} />
               </button>
             )}
           </div>
@@ -134,13 +143,13 @@ function ConvoRow({
               : 'border-l-transparent hover:bg-surface-hover'
         }`}
       >
-        <Avatar name={name} size={48} />
-        <div className="min-w-0 flex-1">
+        <Avatar name={name} size={56} />
+        <div className="min-w-0 flex-1 pt-1">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-sm font-semibold text-ink">{name}</span>
-            <span className="shrink-0 text-[11px] text-ink-faint">{when}</span>
+            <span className="truncate text-[16px] font-semibold text-ink md:text-sm">{name}</span>
+            <span className="shrink-0 text-[12px] text-ink-muted">{when}</span>
           </div>
-          <p className="truncate text-[13px] text-ink-muted">{preview}</p>
+          <p className="truncate text-[14px] text-ink-muted md:text-[13px]">{preview}</p>
         </div>
       </button>
     </li>

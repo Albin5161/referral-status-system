@@ -9,7 +9,7 @@ body,
 }
 
 body {
-  @apply bg-surface-page text-ink font-sans antialiased;
+  @apply bg-surface-app text-ink font-sans antialiased md:bg-surface-page;
 }
 
 /* Consistent, accessible keyboard focus for interactive elements. */

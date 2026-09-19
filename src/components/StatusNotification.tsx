@@ -1,12 +1,14 @@
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Bell, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { hasMobileChrome } from './LinkedInHeader'
 
 // Status Notification — PRD §4 item 6. A banner/toast (not a page) shown to the
 // REQUESTER when the referrer posts a Status Update. Clicking opens Referral Status.
 export function StatusNotification() {
   const { role, notifications, dismissNotification, markNotificationRead } = useApp()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   if (role !== 'requester') return null
 
@@ -21,7 +23,11 @@ export function StatusNotification() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-20 z-40 md:bottom-4 flex justify-center px-4">
+    <div
+      className={`fixed inset-x-0 z-40 flex justify-center px-4 md:bottom-4 ${
+        hasMobileChrome(pathname) ? 'bottom-20' : 'bottom-4'
+      }`}
+    >
       <div className="animate-slide-up flex w-full max-w-md items-start gap-3 rounded-card border border-line bg-surface p-3 shadow-pop">
         <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
           <Bell size={16} />

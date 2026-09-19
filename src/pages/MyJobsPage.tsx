@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Briefcase, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Briefcase, ChevronRight } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { deriveCurrentStatus } from '../stateMachine'
 import { StatusBadge } from '../components/StatusBadge'
@@ -17,9 +17,19 @@ export function MyJobsPage() {
   return (
     <div className="animate-fade-in mx-auto max-w-3xl md:px-4 md:py-4">
       <div className="overflow-hidden border-y border-line bg-surface md:rounded-card md:border md:shadow-card">
-        <div className="border-b border-line px-4 py-3">
-          <h1 className="text-[15px] font-semibold text-ink">My Jobs</h1>
-          <p className="text-[13px] text-ink-muted">Your referral requests</p>
+        <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+          {/* Phones: full-screen page, so it needs its own way back */}
+          <Link
+            to="/"
+            aria-label="Back to Home"
+            className="-ml-1 rounded-full p-1 text-ink-muted hover:bg-black/5 hover:text-ink md:hidden"
+          >
+            <ArrowLeft size={22} />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-[15px] font-semibold text-ink">My Jobs</h1>
+            <p className="text-[13px] text-ink-muted">Your referral requests</p>
+          </div>
         </div>
 
         {rows.length === 0 ? (
