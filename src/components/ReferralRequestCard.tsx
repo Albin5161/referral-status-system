@@ -5,15 +5,18 @@ import { useApp } from '../context/AppContext'
 import { deriveCurrentStatus } from '../stateMachine'
 import { StatusBadge } from './StatusBadge'
 import { formatDate } from '../format'
+import { isLanding } from '../landing'
 
 // The Referral Request card that appears inline in the Message Thread (PRD §5.8).
 // Current status is derived, never stored.
 export function ReferralRequestCard({ request }: { request: ReferralRequest }) {
   const { statusUpdates } = useApp()
   const status = deriveCurrentStatus(request, statusUpdates)
+  // Just sent: it lands from above, continuing the send animation.
+  const landing = isLanding(request.id)
 
   return (
-    <div className="animate-pop-in overflow-hidden rounded-card border border-line bg-surface shadow-card transition-shadow duration-200 hover:shadow-cardHover">
+    <div className={`${landing ? 'card-land' : 'animate-pop-in'} overflow-hidden rounded-card border border-line bg-surface shadow-card transition-shadow duration-200 hover:shadow-cardHover`}>
       <div className="flex items-start gap-3 p-3.5">
         <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded bg-accent/10 text-accent">
           <FileText size={18} />

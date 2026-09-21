@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Briefcase, Check, Paperclip } from 'lucide-react'
+import { ArrowLeft, Briefcase, Paperclip } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useTour } from '../context/TourContext'
 import {
@@ -16,6 +16,7 @@ import { Button } from '../components/Button'
 import { StatusIcon, referrerChoice, statusLabel } from '../statusMeta'
 import { displayActor, formatDate, formatTimestamp } from '../format'
 import { useStatusTransition } from '../useStatusTransition'
+import { AnswerMoment, isAnswer } from '../components/AnswerMoment'
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>()
@@ -23,19 +24,21 @@ export function StatusPage() {
     useApp()
   const navigate = useNavigate()
 
-  // Brief, auto-dismissing acknowledgment after a status change (FIX 2 —
-  // visibility of system status). Lifted here so it survives the action's own
-  // state change (Withdraw unmounts the requester action once terminal).
-  const [ack, setAck] = useState<string | null>(null)
-  const ackTimer = useRef<number | null>(null)
-  const showAck = useCallback((message: string) => {
-    setAck(message)
-    if (ackTimer.current) window.clearTimeout(ackTimer.current)
-    ackTimer.current = window.setTimeout(() => setAck(null), 2500)
+  // The moment right after someone answers (visibility of system status). Lifted
+  // here so it survives the action's own state change: a final answer unmounts
+  // the referrer's options, and Withdraw unmounts the requester's action.
+  // Final answers keep their moment. Looking into it fades, because the
+  // referrer still has a decision to make underneath it.
+  const [moment, setMoment] = useState<{ status: ReferralStatus; key: number } | null>(null)
+  const momentTimer = useRef<number | null>(null)
+  const showMoment = useCallback((status: ReferralStatus) => {
+    setMoment({ status, key: Date.now() })
+    if (momentTimer.current) window.clearTimeout(momentTimer.current)
+    if (!isTerminal(status)) momentTimer.current = window.setTimeout(() => setMoment(null), 4200)
   }, [])
   useEffect(
     () => () => {
-      if (ackTimer.current) window.clearTimeout(ackTimer.current)
+      if (momentTimer.current) window.clearTimeout(momentTimer.current)
     },
     [],
   )
@@ -141,25 +144,25 @@ export function StatusPage() {
             <RequesterActions
               requestId={request.id}
               status={status}
-              onDone={showAck}
+              onDone={showMoment}
             />
           ) : (
             <ReferrerActions
               requestId={request.id}
               status={status}
-              onDone={showAck}
+              onDone={showMoment}
+              showClosed={!moment}
             />
           )}
 
-          {ack && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="animate-fade-in mt-3 inline-flex items-center gap-1.5 rounded-full bg-black/[0.04] px-3 py-1.5 text-[13px] text-ink-muted"
-            >
-              <Check size={14} className="text-ink-muted" />
-              {ack}
-            </div>
+          {moment && isAnswer(moment.status) && (
+            <AnswerMoment
+              key={moment.key}
+              status={moment.status}
+              // Withdraw travels from the requester; every other answer from the referrer
+              from={moment.status === 'Withdrawn' ? ME.name : RECIPIENT.name}
+              to={moment.status === 'Withdrawn' ? RECIPIENT.name : ME.name}
+            />
           )}
         </div>
 
@@ -232,7 +235,7 @@ function RequesterActions({
 }: {
   requestId: string
   status: ReferralStatus
-  onDone: (message: string) => void
+  onDone: (status: ReferralStatus) => void
 }) {
   const { postStatusUpdate, members } = useApp()
   const [confirming, setConfirming] = useState(false)
@@ -259,7 +262,7 @@ function RequesterActions({
               variant="secondary"
               onClick={() => {
                 postStatusUpdate(requestId, 'Withdrawn', members.me.name)
-                onDone('Request withdrawn')
+                onDone('Withdrawn')
               }}
             >
               Withdraw
@@ -276,10 +279,12 @@ function ReferrerActions({
   requestId,
   status,
   onDone,
+  showClosed,
 }: {
   requestId: string
   status: ReferralStatus
-  onDone: (message: string) => void
+  onDone: (status: ReferralStatus) => void
+  showClosed: boolean // hidden while the answer's own moment is on screen
 }) {
   const { postStatusUpdate } = useApp()
   // "No Update Received" is system-inferred only, never a manual choice.
@@ -292,6 +297,7 @@ function ReferrerActions({
 
   // Empty transition array → no status-change action renders at all (PRD §3).
   if (options.length === 0) {
+    if (!showClosed) return null
     return (
       <div className="mt-4 rounded-card border border-line bg-surface-hover px-3 py-2.5">
         <p className="text-[13px] text-ink-muted">
@@ -304,7 +310,7 @@ function ReferrerActions({
   const post = () => {
     if (!selected) return
     postStatusUpdate(requestId, selected, RECIPIENT.name, note)
-    onDone(`Update sent to ${ME.name.split(' ')[0]}`)
+    onDone(selected)
     setSelected('')
     setNote('')
     setConfirmingTerminal(false)

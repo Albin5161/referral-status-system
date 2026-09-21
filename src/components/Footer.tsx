@@ -1,11 +1,18 @@
 import { useApp } from '../context/AppContext'
+import { useState } from 'react'
 import { useTour } from '../context/TourContext'
+import { getSendStyle, setSendStyle, type SendStyle } from '../demoPrefs'
 
 // Persistent disclaimer — PRD §0. Also surfaces the demo-control note for the
 // role switcher so the perspective toggle is never mistaken for real product UI.
 export function Footer() {
   const { role } = useApp()
   const { restartTest, replayOnboarding, openFeedback } = useTour()
+  const [sendStyle, setStyle] = useState<SendStyle>(getSendStyle)
+  const pick = (style: SendStyle) => {
+    setSendStyle(style)
+    setStyle(style)
+  }
   return (
     <footer className="mx-auto mt-8 max-w-3xl px-4 pb-10 text-center">
       <p className="text-[11px] leading-relaxed text-ink-faint">
@@ -34,6 +41,20 @@ export function Footer() {
         >
           Restart test
         </button>
+      </div>
+      {/* Demo only: compare the two send animations */}
+      <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-ink-faint">
+        <span>Send animation:</span>
+        {(['envelope', 'fold'] as const).map((style) => (
+          <button
+            key={style}
+            onClick={() => pick(style)}
+            aria-pressed={sendStyle === style}
+            className={sendStyle === style ? 'font-semibold text-ink-muted' : 'underline hover:text-ink-muted'}
+          >
+            {style === 'envelope' ? 'Envelope' : 'Fold'}
+          </button>
+        ))}
       </div>
     </footer>
   )

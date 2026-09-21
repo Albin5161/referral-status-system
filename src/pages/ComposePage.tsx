@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Briefcase,
   Check,
   FileText,
-  Loader2,
   MessageSquare,
   Paperclip,
   X,
@@ -22,6 +21,12 @@ import {
 import { Avatar } from '../components/Avatar'
 import { Button } from '../components/Button'
 import { save } from '../storage'
+import { SEND_MS, SendMotion, type SendPhase } from '../components/SendMotion'
+import { failNextSend, getSendStyle } from '../demoPrefs'
+import { markLanded } from '../landing'
+import { useReducedMotion } from '../useReducedMotion'
+
+const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 
 type MessageType = 'message' | 'referral'
 type Step = 'compose' | 'review' | 'creating' | 'error'
@@ -50,7 +55,19 @@ export function ComposePage() {
   const first = recipient.name.split(' ')[0]
   const [step, setStep] = useState<Step>('compose')
   const [validationError, setValidationError] = useState<string | null>(null)
-  const [simulateFailure, setSimulateFailure] = useState(false)
+  const [simulateFailure, setSimulateFailure] = useState(failNextSend)
+  const [sendStyle, setSendStyleNow] = useState(getSendStyle)
+  const [phase, setPhase] = useState<SendPhase>('fold')
+  const reduced = useReducedMotion()
+  const alive = useRef(true)
+  // Set true on mount as well as false on unmount: React's strict mode mounts
+  // twice in development, and a cleanup-only flag would stay false.
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
 
   const backTo = lean ? '/jobs' : `/messaging?c=${recipient.id}`
 
@@ -78,10 +95,18 @@ export function ComposePage() {
 
   // Step 3 → pessimistic creation (PRD §5.7). Same creation logic for both entry
   // points — only the recipient/job are pre-populated in lean mode.
+  //
+  // The send animation is the loading state: it starts on tap, while the save
+  // is in flight. It lifts off only once the fold has finished AND the save has
+  // succeeded, so it never claims "sent" early. A failure plays it backwards.
   const handleConfirm = async () => {
+    const ms = (n: number) => (reduced ? 0 : n)
+    setSendStyleNow(getSendStyle()) // the footer toggle may have changed it
     setStep('creating')
+    setPhase('fold')
+    const folded = wait(ms(SEND_MS.fold))
     try {
-      await createReferralRequest(
+      const request = await createReferralRequest(
         {
           recipientId: recipient.id,
           jobPostingId: activeJob.id,
@@ -92,10 +117,21 @@ export function ComposePage() {
         },
         { simulateFailure },
       )
+      await folded
+      if (!alive.current) return
+      setPhase('leave')
+      await wait(ms(SEND_MS.leave))
+      if (!alive.current) return
       // Test insight: which entry point this tester chose (sent with their feedback).
       save('tour:entryPoint', lean ? 'Job Tracker' : 'Messaging')
+      markLanded(request.id) // the card lands in the thread instead of appearing
       navigate(`/messaging?c=${recipient.id}`) // card shows at Pending in that thread
     } catch {
+      await folded
+      if (!alive.current) return
+      setPhase('unfold')
+      await wait(ms(SEND_MS.unfold))
+      if (!alive.current) return
       setStep('error')
     }
   }
@@ -118,7 +154,9 @@ export function ComposePage() {
             {step === 'review'
               ? 'Ready to send?'
               : step === 'creating'
-                ? 'Sending your request…'
+                ? phase === 'leave'
+                  ? 'Sent'
+                  : 'Sending your request…'
                 : step === 'error'
                   ? 'That didn’t go through'
                   : lean
@@ -337,10 +375,14 @@ export function ComposePage() {
         )}
 
         {step === 'creating' && (
-          <div className="flex flex-col items-center gap-3 p-10 text-center">
-            <Loader2 size={28} className="animate-spin text-accent" />
-            <p className="text-sm text-ink-muted">Sending your request to {first}…</p>
-          </div>
+          <SendMotion
+            style={sendStyle}
+            phase={phase}
+            recipientName={recipient.name}
+            jobTitle={activeJob.title}
+            company={activeJob.company}
+            message={message}
+          />
         )}
 
         {step === 'error' && (
