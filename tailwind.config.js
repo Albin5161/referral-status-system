@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Single blue accent — reserved ONLY for actionable elements (PRD §9).
+        // Blue is reserved for actionable elements (PRD §9, and LinkedIn's own rule).
         accent: {
           DEFAULT: '#0A66C2',
           hover: '#004182',
@@ -23,6 +23,21 @@ export default {
           page: '#f4f2ee', // LinkedIn web canvas
           app: '#e9e5df', // LinkedIn iOS canvas (gaps between feed posts)
           hover: '#f3f6f8',
+        },
+        // LinkedIn's positive green, matched by eye from the iOS Job tracker on
+        // Mobbin: the "Applied" tag, the selected stage radio, the selected filter
+        // chip. LinkedIn's rule, which we follow: blue = you can act on it,
+        // green = progress or good news, grey = neutral. Never red for a person's no.
+        positive: {
+          DEFAULT: '#01754F', // selected controls
+          tint: '#E1EFDF', // tag background
+          ink: '#1B5E3B', // tag text
+        },
+        // LinkedIn's success badge (the sage ring on "You're all set", "Post successful")
+        success: {
+          ring: '#A8BF96',
+          disc: '#DCE7D1',
+          ink: '#38434F',
         },
         line: 'rgba(0,0,0,0.08)',
         danger: '#CB112D', // LinkedIn notification badge / error red
@@ -98,10 +113,10 @@ export default {
           '60%': { opacity: '1', transform: 'scale(1.08)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
-        // One soft neutral ring when a request reaches Referred. Plays once.
+        // One soft ring when a request reaches Referred, in the success badge's sage.
         ringOnce: {
-          '0%': { boxShadow: '0 0 0 0 rgba(0,0,0,0.16)' },
-          '100%': { boxShadow: '0 0 0 14px rgba(0,0,0,0)' },
+          '0%': { boxShadow: '0 0 0 0 rgba(168,191,150,0.6)' },
+          '100%': { boxShadow: '0 0 0 14px rgba(168,191,150,0)' },
         },
         // History: a new entry drops in, and its connector grows down to the last.
         entryIn: {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Briefcase, Paperclip } from 'lucide-react'
+import { ArrowLeft, Briefcase, Check, Paperclip } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useTour } from '../context/TourContext'
 import {
@@ -13,7 +13,7 @@ import { ME, RECIPIENT } from '../sampleData'
 import type { ReferralStatus } from '../types'
 import { StatusExplainer } from '../components/StatusExplainer'
 import { Button } from '../components/Button'
-import { StatusIcon, referrerChoice, statusLabel } from '../statusMeta'
+import { StatusIcon, referrerChoice, statusLabel, statusTone } from '../statusMeta'
 import { displayActor, formatDate, formatTimestamp } from '../format'
 import { useStatusTransition } from '../useStatusTransition'
 import { AnswerMoment, isAnswer } from '../components/AnswerMoment'
@@ -192,9 +192,11 @@ export function StatusPage() {
                   <div className="flex flex-col items-center">
                     <span
                       className={`grid h-7 w-7 shrink-0 place-items-center rounded-full transition-colors duration-300 ${
-                        newest
-                          ? 'bg-accent/10 text-accent'
-                          : 'bg-black/[0.05] text-ink-muted'
+                        !newest
+                          ? 'bg-black/[0.05] text-ink-muted'
+                          : statusTone(su.newStatus) === 'positive'
+                            ? 'bg-positive-tint text-positive-ink'
+                            : 'bg-black/[0.08] text-ink-action'
                       }`}
                     >
                       <StatusIcon status={su.newStatus} size={15} />
@@ -348,16 +350,16 @@ function ReferrerActions({
               aria-checked={active}
               onClick={() => selectOption(opt)}
               className={`flex w-full items-start gap-3 rounded-card border px-3 py-2.5 text-left transition-colors ${
-                active ? 'border-accent bg-accent/5' : 'border-line hover:bg-surface-hover'
+                active ? 'border-positive bg-positive-tint/50' : 'border-line hover:bg-surface-hover'
               }`}
             >
               <span
                 className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 ${
-                  active ? 'border-accent' : 'border-black/30'
+                  active ? 'border-positive' : 'border-black/30'
                 }`}
                 aria-hidden
               >
-                {active && <span className="h-2 w-2 rounded-full bg-accent" />}
+                {active && <span className="h-2 w-2 rounded-full bg-positive" />}
               </span>
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-ink">{choice.label}</span>
@@ -434,10 +436,14 @@ function StatusHero({
 
   return (
     <div className="flex items-start gap-3">
+      {/* Referred wears LinkedIn's success badge: a dark check on a sage disc
+          with a sage ring, as on "You're all set" and "Post successful". */}
       <span
-        className={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[0.05] text-ink-muted ${
-          celebrate ? 'animate-ring-once' : ''
-        }`}
+        className={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full ${
+          status === 'Referred'
+            ? 'border-[3px] border-success-ring bg-success-disc text-success-ink' // a border, not a ring: the pulse animates box-shadow
+            : 'bg-black/[0.05] text-ink-muted'
+        } ${celebrate ? 'animate-ring-once' : ''}`}
         style={celebrate ? { animationDelay: `${IN_MS + 520}ms` } : undefined}
       >
         {changing && (
@@ -451,7 +457,7 @@ function StatusHero({
         )}
         <span
           className={`[grid-area:1/1] ${changing && !celebrate ? 'animate-icon-in' : ''} ${
-            celebrate ? 'draw-check' : ''
+            celebrate ? 'draw-tick' : ''
           }`}
           style={
             celebrate
@@ -461,7 +467,7 @@ function StatusHero({
                 : undefined
           }
         >
-          <StatusIcon status={status} size={22} />
+          {status === 'Referred' ? <Check size={22} strokeWidth={2.6} /> : <StatusIcon status={status} size={22} />}
         </span>
       </span>
 

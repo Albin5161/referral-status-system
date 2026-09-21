@@ -54,10 +54,17 @@ function JobRow({ job, onAsk }: { job: TrackedJob; onAsk: () => void }) {
 
       {/* Phones: text takes the full row and the action wraps underneath it */}
       <div className="min-w-0 flex-1 basis-[calc(100%-60px)] sm:basis-auto">
+        {/* Stage tag above the title, as in LinkedIn's Job tracker: green once
+            you've acted on the job, grey while it is only saved */}
+        <span
+          className={`mb-1 inline-block rounded px-1.5 py-0.5 text-[12px] font-semibold ${
+            job.trackStatus === 'Saved' ? 'bg-black/[0.06] text-ink-action' : 'bg-positive-tint text-positive-ink'
+          }`}
+        >
+          {job.trackStatus}
+        </span>
         <p className="truncate text-[16px] font-semibold text-ink md:text-[15px]">{job.title}</p>
-        <p className="truncate text-[13px] text-ink-muted">
-          {job.company} · {job.trackStatus}
-        </p>
+        <p className="truncate text-[13px] text-ink-muted">{job.company}</p>
 
         {/* Connection avatars for this company (real LinkedIn shows these) */}
         {hasConnections && (

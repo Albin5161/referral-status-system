@@ -432,16 +432,16 @@ function TypeCard({
       onClick={onClick}
       aria-pressed={active}
       className={`flex items-start gap-2 rounded-card border px-3 py-2.5 text-left transition-colors ${
-        active ? 'border-accent bg-accent/5' : 'border-line hover:bg-surface-hover'
+        active ? 'border-positive bg-positive-tint/50' : 'border-line hover:bg-surface-hover'
       }`}
     >
-      <span className={`mt-0.5 ${active ? 'text-accent' : 'text-ink-muted'}`}>
+      <span className={`mt-0.5 ${active ? 'text-positive' : 'text-ink-muted'}`}>
         {icon}
       </span>
       <span className="min-w-0">
         <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
           {label}
-          {active && <Check size={14} className="text-accent" />}
+          {active && <Check size={14} className="text-positive" />}
         </span>
         <span className="block text-[12px] text-ink-muted">{hint}</span>
       </span>

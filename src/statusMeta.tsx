@@ -9,10 +9,8 @@ import {
 } from 'lucide-react'
 import type { ReferralStatus } from './types'
 
-// Monochrome status icons. PROJECT_LOG (Session 3) explicitly allows status to
-// communicate through "text/icon, not color-coding" — so these render in the
-// current ink color, never a semantic hue. They aid recognition without layering
-// a color scheme onto the single blue accent.
+// Status icons. They render in the current text colour, which the tag sets from
+// the status tone below, so the icon and the word always agree.
 const ICONS: Record<ReferralStatus, LucideIcon> = {
   Pending: Clock,
   Considering: Eye,
@@ -33,6 +31,24 @@ export function StatusIcon({
 }) {
   const Icon = ICONS[status]
   return <Icon size={size} className={className} aria-hidden />
+}
+
+// Tone, following LinkedIn's Job tracker: green while a request is live or has
+// good news (like its "Applied" tag), grey once it is quiet or closed (like
+// "Saved"). A person's no is grey, never red, as in LinkedIn's own rejections.
+export type StatusTone = 'positive' | 'neutral'
+
+const TONES: Record<ReferralStatus, StatusTone> = {
+  Pending: 'positive',
+  Considering: 'positive',
+  Referred: 'positive',
+  'No Update Received': 'neutral',
+  'Unable to Refer': 'neutral',
+  Withdrawn: 'neutral',
+}
+
+export function statusTone(status: ReferralStatus): StatusTone {
+  return TONES[status]
 }
 
 // Display labels. The stored enum (PRD §2) never changes; these are the words

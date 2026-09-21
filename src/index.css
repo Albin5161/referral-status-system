@@ -37,6 +37,16 @@ textarea:focus-visible,
   stroke-dasharray: 12;
   animation: draw-tick 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--draw-delay, 0ms) + 420ms) both;
 }
+/* The same idea for a plain check (Referred's success badge), which is a
+   longer line (about 22.6 units), so it needs its own dash length. */
+.draw-tick path {
+  stroke-dasharray: 24;
+  animation: draw-tick-long 0.42s cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--draw-delay, 0ms) + 120ms) both;
+}
+@keyframes draw-tick-long {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
 @keyframes draw-circle {
   from { stroke-dashoffset: 64; }
   to { stroke-dashoffset: 0; }
