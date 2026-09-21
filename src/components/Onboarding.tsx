@@ -6,6 +6,9 @@ import { Avatar } from './Avatar'
 import { Button } from './Button'
 import { LinkedInLogo } from './LinkedInIcons'
 import { StatusBadge } from './StatusBadge'
+import { statusLabel } from '../statusMeta'
+import type { ReferralStatus } from '../types'
+import { useReducedMotion } from '../useReducedMotion'
 
 interface Slide {
   eyebrow: string
@@ -24,7 +27,7 @@ const SLIDES: Slide[] = [
   {
     eyebrow: 'How it works',
     title: 'Your referrer keeps you posted',
-    body: 'Every request starts as Pending. As things move, your referrer updates the status, and you get notified each time it changes.',
+    body: 'Every request starts as Sent. As things move, your referrer updates the status, and you get notified each time it changes.',
     visual: <TimelineVisual />,
   },
   {
@@ -170,53 +173,117 @@ function CardVisual() {
   )
 }
 
+// Slide 2 demonstrates the idea instead of describing it: the request moves
+// Sent, Looking into it, Referred, and a notification reports each step.
+const TIMELINE: ReferralStatus[] = ['Pending', 'Considering', 'Referred']
+
 function TimelineVisual() {
+  const reduced = useReducedMotion()
+  const [step, setStep] = useState(reduced ? TIMELINE.length - 1 : 0)
+  const referrer = RECIPIENT.name.split(' ')[0]
+
+  useEffect(() => {
+    if (reduced) {
+      setStep(TIMELINE.length - 1)
+      return
+    }
+    // Linger on the outcome so it reads as an ending, then start over.
+    const last = step === TIMELINE.length - 1
+    const t = window.setTimeout(() => setStep((n) => (n + 1) % TIMELINE.length), last ? 2600 : 1500)
+    return () => window.clearTimeout(t)
+  }, [step, reduced])
+
   return (
     <div className="flex w-full max-w-[280px] flex-col gap-2.5">
-      <div className="flex items-center gap-2">
-        <StatusBadge status="Pending" size="sm" />
-        <span className="h-px flex-1 bg-black/15" />
-        <StatusBadge status="Considering" size="sm" />
-        <span className="h-px flex-1 bg-black/15" />
-        <StatusBadge status="Referred" size="sm" />
+      {/* Badges light up in order; the gaps carry the sequence at phone width */}
+      <div className="flex items-center justify-between gap-2">
+        {TIMELINE.map((s, n) => (
+          <span
+            key={s}
+            className={`shrink-0 whitespace-nowrap transition-all duration-300 ${step >= n ? 'opacity-100' : 'opacity-40'} ${
+              step === n ? 'scale-105' : 'scale-100'
+            }`}
+          >
+            <StatusBadge status={s} size="sm" />
+          </span>
+        ))}
       </div>
-      <div className="flex items-start gap-2.5 rounded-card border border-line bg-surface p-2.5 shadow-card">
+      <div
+        key={step}
+        className="animate-pop-in flex items-start gap-2.5 rounded-card border border-line bg-surface p-2.5 shadow-card"
+      >
         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
           <Bell size={14} />
         </span>
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-ink">Your referral status was updated</p>
-          <p className="text-[12px] text-ink-muted">New status: Referred</p>
+          <p className="text-[13px] font-semibold text-ink">
+            {step === 0 ? `Request sent to ${referrer}` : `${referrer} updated your request`}
+          </p>
+          <p className="text-[12px] text-ink-muted">
+            {step === 0
+              ? 'You’ll hear when it changes'
+              : `New status: ${statusLabel(TIMELINE[step])}`}
+          </p>
         </div>
       </div>
     </div>
   )
 }
 
+// Slide 3 rehearses the one thing testers find hard, playing both people: the
+// switch flips on its own and the two people trade places.
 function RolesVisual() {
+  const reduced = useReducedMotion()
+  const [asReferrer, setAsReferrer] = useState(false)
+
+  useEffect(() => {
+    if (reduced) {
+      setAsReferrer(false)
+      return
+    }
+    const t = window.setInterval(() => setAsReferrer((v) => !v), 1800)
+    return () => window.clearInterval(t)
+  }, [reduced])
+
   return (
     <div className="flex w-full max-w-[280px] flex-col items-center gap-4">
       <div className="flex w-full items-center justify-between">
-        <Person name={ME.name} role="Requester" />
+        <Person name={ME.name} role="Requester" active={!asReferrer} />
         <ArrowRight size={18} className="text-ink-muted" />
-        <Person name={RECIPIENT.name} role="Referrer" />
+        <Person name={RECIPIENT.name} role="Referrer" active={asReferrer} />
       </div>
       <div className="flex items-center gap-2">
         <span className="text-[11px] text-ink-muted">Viewing as</span>
-        <div className="flex items-center rounded-full bg-black/[0.06] p-0.5">
-          <span className="rounded-full bg-surface px-2.5 py-1 text-xs font-medium text-ink shadow-sm">
-            Requester
-          </span>
-          <span className="px-2.5 py-1 text-xs font-medium text-ink-muted">Referrer</span>
+        <div className="relative grid grid-cols-2 rounded-full bg-black/[0.06] p-0.5">
+          <span
+            aria-hidden
+            className={`absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-full bg-surface shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.3,1)] ${
+              asReferrer ? 'translate-x-full' : 'translate-x-0'
+            }`}
+          />
+          {['Requester', 'Referrer'].map((label, n) => (
+            <span
+              key={label}
+              className={`relative px-2.5 py-1 text-center text-xs font-medium transition-colors duration-300 ${
+                (n === 1) === asReferrer ? 'text-ink' : 'text-ink-muted'
+              }`}
+            >
+              {label}
+            </span>
+          ))}
         </div>
       </div>
     </div>
   )
 }
 
-function Person({ name, role }: { name: string; role: string }) {
+function Person({ name, role, active }: { name: string; role: string; active: boolean }) {
   return (
-    <div className="flex w-24 flex-col items-center text-center">
+    <div
+      className={`flex w-24 flex-col items-center text-center transition-all duration-300 ${
+        active ? 'scale-100 opacity-100' : 'scale-95 opacity-40'
+      }`}
+    >
       <Avatar name={name} size={44} />
       <p className="mt-1.5 text-[13px] font-semibold leading-tight text-ink">{name}</p>
       <p className="text-[11px] text-ink-muted">{role}</p>

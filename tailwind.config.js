@@ -80,6 +80,44 @@ export default {
           '60%': { opacity: '1', transform: 'scale(1.15)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        // Status change: the status you last saw leaves, the new one arrives.
+        statusOut: {
+          from: { opacity: '1', transform: 'translateY(0)' },
+          to: { opacity: '0', transform: 'translateY(-10px)' },
+        },
+        statusIn: {
+          from: { opacity: '0', transform: 'translateY(10px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        iconOut: {
+          from: { opacity: '1', transform: 'scale(1)' },
+          to: { opacity: '0', transform: 'scale(0.5)' },
+        },
+        iconIn: {
+          '0%': { opacity: '0', transform: 'scale(0.5)' },
+          '60%': { opacity: '1', transform: 'scale(1.08)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        // One soft neutral ring when a request reaches Referred. Plays once.
+        ringOnce: {
+          '0%': { boxShadow: '0 0 0 0 rgba(0,0,0,0.16)' },
+          '100%': { boxShadow: '0 0 0 14px rgba(0,0,0,0)' },
+        },
+        // History: a new entry drops in, and its connector grows down to the last.
+        entryIn: {
+          from: { opacity: '0', transform: 'translateY(-8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        grow: {
+          from: { transform: 'scaleY(0)' },
+          to: { transform: 'scaleY(1)' },
+        },
+        // The entry makes room for itself, so the older history is pushed down
+        // rather than a blank gap waiting to be filled.
+        entryExpand: {
+          from: { gridTemplateRows: '0fr' },
+          to: { gridTemplateRows: '1fr' },
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out both',
@@ -90,6 +128,14 @@ export default {
         nudge: 'nudge 1.2s ease-in-out infinite',
         'nudge-x': 'nudgeX 1.2s ease-in-out infinite',
         'step-done': 'stepDone 0.45s cubic-bezier(0.2,0.8,0.3,1) both',
+        'status-out': 'statusOut 0.26s cubic-bezier(0.4,0,1,1) both',
+        'status-in': 'statusIn 0.4s cubic-bezier(0.2,0.8,0.3,1) both',
+        'icon-out': 'iconOut 0.22s cubic-bezier(0.4,0,1,1) both',
+        'icon-in': 'iconIn 0.45s cubic-bezier(0.2,0.8,0.3,1) both',
+        'ring-once': 'ringOnce 0.9s ease-out both',
+        'entry-in': 'entryIn 0.36s cubic-bezier(0.2,0.8,0.3,1) both',
+        grow: 'grow 0.42s cubic-bezier(0.4,0,0.2,1) both',
+        'entry-expand': 'entryExpand 0.4s cubic-bezier(0.4,0,0.2,1) both',
       },
       fontFamily: {
         sans: [

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Briefcase, Check, Paperclip } from 'lucide-react'
 import { useApp } from '../context/AppContext'
@@ -15,6 +15,7 @@ import { StatusExplainer } from '../components/StatusExplainer'
 import { Button } from '../components/Button'
 import { StatusIcon, referrerChoice, statusLabel } from '../statusMeta'
 import { displayActor, formatDate, formatTimestamp } from '../format'
+import { useStatusTransition } from '../useStatusTransition'
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>()
@@ -40,6 +41,8 @@ export function StatusPage() {
   )
 
   const request = referralRequests.find((r) => r.id === id)
+  const history = request ? historyFor(request, statusUpdates) : []
+  const transition = useStatusTransition(role, id, history)
 
   // Test journey ends when the requester sees a status the referrer set.
   const { markOutcomeSeen } = useTour()
@@ -79,7 +82,9 @@ export function StatusPage() {
   }
 
   const status = deriveCurrentStatus(request, statusUpdates)
-  const history = historyFor(request, statusUpdates)
+  const latest = history.at(-1)
+  // Oldest unseen entry first, so the history fills in the order it happened.
+  const unseenOrder = history.filter((u) => transition.unseenIds.has(u.id)).map((u) => u.id)
 
   return (
     <div className="animate-fade-in mx-auto max-w-3xl md:px-4 md:py-4">
@@ -122,22 +127,12 @@ export function StatusPage() {
           <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
             Current status
           </p>
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[0.05] text-ink-muted">
-              <StatusIcon status={status} size={22} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[22px] font-semibold leading-tight text-ink">
-                {statusLabel(status)}
-              </p>
-              <p className="mt-0.5 text-[12px] text-ink-faint">
-                Updated {formatTimestamp(history.at(-1)?.changedAt ?? request.createdAt)}
-              </p>
-              <div className="mt-3">
-                <StatusExplainer status={status} />
-              </div>
-            </div>
-          </div>
+          <StatusHero
+            key={latest?.id}
+            status={status}
+            from={transition.from?.newStatus}
+            updatedAt={latest?.changedAt ?? request.createdAt}
+          />
 
           {/* Role-specific actions */}
           {role === 'requester' ? (
@@ -173,21 +168,37 @@ export function StatusPage() {
           </p>
           <ol className="space-y-1">
             {[...history].reverse().map((su, idx) => {
-              const latest = idx === 0
+              const newest = idx === 0
               const isLast = idx === history.length - 1
+              // Unseen entries arrive after the hero has changed, oldest first.
+              const order = unseenOrder.indexOf(su.id)
+              const delay = order === -1 ? null : ENTRY_DELAY_MS + order * ENTRY_STAGGER_MS
               return (
-                <li key={su.id} className="flex gap-3">
+                <li
+                  key={su.id}
+                  className={`grid ${delay === null ? '' : 'animate-entry-expand'}`}
+                  style={delay === null ? undefined : { animationDelay: `${delay}ms` }}
+                >
+                <div
+                  className={`flex min-h-0 gap-3 overflow-hidden ${delay === null ? '' : 'animate-entry-in'}`}
+                  style={delay === null ? undefined : { animationDelay: `${delay + 60}ms` }}
+                >
                   <div className="flex flex-col items-center">
                     <span
-                      className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${
-                        latest
+                      className={`grid h-7 w-7 shrink-0 place-items-center rounded-full transition-colors duration-300 ${
+                        newest
                           ? 'bg-accent/10 text-accent'
                           : 'bg-black/[0.05] text-ink-muted'
                       }`}
                     >
                       <StatusIcon status={su.newStatus} size={15} />
                     </span>
-                    {!isLast && <span className="my-1 w-px flex-1 bg-line" />}
+                    {!isLast && (
+                      <span
+                        className={`my-1 w-px flex-1 origin-top bg-line ${delay === null ? '' : 'animate-grow'}`}
+                        style={delay === null ? undefined : { animationDelay: `${delay + 160}ms` }}
+                      />
+                    )}
                   </div>
                   <div className="pb-4 pt-0.5">
                     <p className="text-sm font-semibold text-ink">{statusLabel(su.newStatus)}</p>
@@ -200,6 +211,7 @@ export function StatusPage() {
                       </p>
                     )}
                   </div>
+                </div>
                 </li>
               )
             })}
@@ -374,6 +386,97 @@ function ReferrerActions({
           </Button>
         </div>
       )}
+    </div>
+  )
+}
+
+// ——— The status change ———
+// Timing, in one place. The hero goes first: the status you last saw holds for
+// a beat so you register it, leaves, and the new one arrives. The history
+// fills in after, so your eye goes hero first, then the record.
+const HOLD_MS = 320 // how long the old status stays before it leaves
+const IN_MS = HOLD_MS + 170 // new status starts arriving as the old one clears
+const ENTRY_DELAY_MS = IN_MS + 260
+const ENTRY_STAGGER_MS = 150
+
+function StatusHero({
+  status,
+  from,
+  updatedAt,
+}: {
+  status: ReferralStatus
+  from?: ReferralStatus // the status this person last saw, when it has changed
+  updatedAt: string
+}) {
+  const changing = from !== undefined && from !== status
+  // Only a referral deserves a moment. "Can't refer" gets the plain change:
+  // celebrating a no would be the wrong thing to say.
+  const celebrate = changing && status === 'Referred'
+  const inDelay = { animationDelay: `${IN_MS}ms` }
+  const afterDelay = { animationDelay: `${IN_MS + 140}ms` }
+
+  return (
+    <div className="flex items-start gap-3">
+      <span
+        className={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[0.05] text-ink-muted ${
+          celebrate ? 'animate-ring-once' : ''
+        }`}
+        style={celebrate ? { animationDelay: `${IN_MS + 520}ms` } : undefined}
+      >
+        {changing && (
+          <span
+            className="animate-icon-out [grid-area:1/1]"
+            style={{ animationDelay: `${HOLD_MS}ms` }}
+            aria-hidden
+          >
+            <StatusIcon status={from} size={22} />
+          </span>
+        )}
+        <span
+          className={`[grid-area:1/1] ${changing && !celebrate ? 'animate-icon-in' : ''} ${
+            celebrate ? 'draw-check' : ''
+          }`}
+          style={
+            celebrate
+              ? ({ '--draw-delay': `${IN_MS}ms` } as CSSProperties)
+              : changing
+                ? inDelay
+                : undefined
+          }
+        >
+          <StatusIcon status={status} size={22} />
+        </span>
+      </span>
+
+      <div className="min-w-0 flex-1">
+        {/* Both labels share one grid cell, so the swap never shifts the layout */}
+        <p className="grid text-[22px] font-semibold leading-tight text-ink">
+          {changing && (
+            <span
+              className="animate-status-out [grid-area:1/1]"
+              style={{ animationDelay: `${HOLD_MS}ms` }}
+              aria-hidden
+            >
+              {statusLabel(from)}
+            </span>
+          )}
+          <span
+            className={`[grid-area:1/1] ${changing ? 'animate-status-in' : ''}`}
+            style={changing ? inDelay : undefined}
+          >
+            {statusLabel(status)}
+          </span>
+        </p>
+        <div
+          className={changing ? 'animate-fade-in' : ''}
+          style={changing ? afterDelay : undefined}
+        >
+          <p className="mt-0.5 text-[12px] text-ink-faint">Updated {formatTimestamp(updatedAt)}</p>
+          <div className="mt-3">
+            <StatusExplainer status={status} />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
