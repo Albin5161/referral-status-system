@@ -162,6 +162,7 @@ export function StatusPage() {
               // Withdraw travels from the requester; every other answer from the referrer
               from={moment.status === 'Withdrawn' ? ME.name : RECIPIENT.name}
               to={moment.status === 'Withdrawn' ? RECIPIENT.name : ME.name}
+              job={request.jobTitleSnapshot}
             />
           )}
         </div>

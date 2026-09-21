@@ -22,7 +22,7 @@ import { Avatar } from '../components/Avatar'
 import { Button } from '../components/Button'
 import { save } from '../storage'
 import { SEND_MS, SendMotion, type SendPhase } from '../components/SendMotion'
-import { failNextSend, getSendStyle } from '../demoPrefs'
+import { failNextSend } from '../demoPrefs'
 import { markLanded } from '../landing'
 import { useReducedMotion } from '../useReducedMotion'
 
@@ -56,7 +56,6 @@ export function ComposePage() {
   const [step, setStep] = useState<Step>('compose')
   const [validationError, setValidationError] = useState<string | null>(null)
   const [simulateFailure, setSimulateFailure] = useState(failNextSend)
-  const [sendStyle, setSendStyleNow] = useState(getSendStyle)
   const [phase, setPhase] = useState<SendPhase>('fold')
   const reduced = useReducedMotion()
   const alive = useRef(true)
@@ -101,7 +100,6 @@ export function ComposePage() {
   // succeeded, so it never claims "sent" early. A failure plays it backwards.
   const handleConfirm = async () => {
     const ms = (n: number) => (reduced ? 0 : n)
-    setSendStyleNow(getSendStyle()) // the footer toggle may have changed it
     setStep('creating')
     setPhase('fold')
     const folded = wait(ms(SEND_MS.fold))
@@ -376,7 +374,6 @@ export function ComposePage() {
 
         {step === 'creating' && (
           <SendMotion
-            style={sendStyle}
             phase={phase}
             recipientName={recipient.name}
             jobTitle={activeJob.title}

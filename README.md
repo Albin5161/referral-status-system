@@ -83,11 +83,10 @@ VITE_FEEDBACK_ENDPOINT=https://formspree.io/f/yourFormId
 
 ## Motion
 
-- **Sending.** The send animation is the loading state: it plays while the
-  save is in flight and only finishes once it succeeds. A failed save plays it
-  backwards to the review. Two versions exist for comparison, an envelope and a
-  fold; switch between them with the "Send animation" link in the footer, or
-  `?send=envelope` / `?send=fold` in the URL. `?fail=1` makes the next send fail.
+- **Sending.** The send animation is the loading state: your request is a
+  letter that goes into an envelope, sealed with the recipient's initials,
+  while the save is in flight. It lifts off only once the save succeeds, and
+  plays backwards to the review if it fails. `?fail=1` makes the next send fail.
 - **Answering.** Every answer gets a short moment in which the answer travels
   to the other person. Referred is the only one where the two people meet.
 - **Arriving.** The status screen remembers what each person last saw and plays
