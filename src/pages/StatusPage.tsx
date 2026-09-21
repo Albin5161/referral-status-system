@@ -85,6 +85,7 @@ export function StatusPage() {
   const latest = history.at(-1)
   // Oldest unseen entry first, so the history fills in the order it happened.
   const unseenOrder = history.filter((u) => transition.unseenIds.has(u.id)).map((u) => u.id)
+  const timing = motionTiming(transition.live)
 
   return (
     <div className="animate-fade-in mx-auto max-w-3xl md:px-4 md:py-4">
@@ -131,6 +132,7 @@ export function StatusPage() {
             key={latest?.id}
             status={status}
             from={transition.from?.newStatus}
+            live={transition.live}
             updatedAt={latest?.changedAt ?? request.createdAt}
           />
 
@@ -172,7 +174,7 @@ export function StatusPage() {
               const isLast = idx === history.length - 1
               // Unseen entries arrive after the hero has changed, oldest first.
               const order = unseenOrder.indexOf(su.id)
-              const delay = order === -1 ? null : ENTRY_DELAY_MS + order * ENTRY_STAGGER_MS
+              const delay = order === -1 ? null : timing.entry + order * timing.stagger
               return (
                 <li
                   key={su.id}
@@ -394,20 +396,28 @@ function ReferrerActions({
 // Timing, in one place. The hero goes first: the status you last saw holds for
 // a beat so you register it, leaves, and the new one arrives. The history
 // fills in after, so your eye goes hero first, then the record.
-const HOLD_MS = 320 // how long the old status stays before it leaves
-const IN_MS = HOLD_MS + 170 // new status starts arriving as the old one clears
-const ENTRY_DELAY_MS = IN_MS + 260
-const ENTRY_STAGGER_MS = 150
+//
+// The hold depends on how you got here. Opening the screen, it has to outlast
+// the page fading in, or you would never read what changed. When the referrer
+// has just tapped Send, a long hold would feel like the tap did nothing.
+function motionTiming(live: boolean) {
+  const hold = live ? 120 : 650 // how long the old status stays before it leaves
+  const enter = hold + 170 // new status starts arriving as the old one clears
+  return { hold, enter, entry: enter + 260, stagger: 150 }
+}
 
 function StatusHero({
   status,
   from,
+  live,
   updatedAt,
 }: {
   status: ReferralStatus
   from?: ReferralStatus // the status this person last saw, when it has changed
+  live: boolean
   updatedAt: string
 }) {
+  const { hold: HOLD_MS, enter: IN_MS } = motionTiming(live)
   const changing = from !== undefined && from !== status
   // Only a referral deserves a moment. "Can't refer" gets the plain change:
   // celebrating a no would be the wrong thing to say.

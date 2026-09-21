@@ -11,9 +11,12 @@ import { load, save } from './storage'
 export interface StatusTransition {
   from?: StatusUpdate // the update they last saw, if the status has moved since
   unseenIds: Set<string> // history entries that are news to them, oldest first
+  // True when the change happened while the screen was open (the referrer just
+  // tapped Send), false when it was waiting for them when they opened it.
+  live: boolean
 }
 
-const NONE: StatusTransition = { unseenIds: new Set() }
+const NONE: StatusTransition = { unseenIds: new Set(), live: false }
 
 export function useStatusTransition(
   role: Role,
@@ -28,11 +31,16 @@ export function useStatusTransition(
   // playing the same transition instead of snapping mid-animation.
   const [seenAtMount] = useState(() => load<string | null>(key, null))
   const shownRef = useRef<string | null>(seenAtMount)
-  const transitionRef = useRef<{ forId: string; fromId: string | null } | null>(null)
+  const mountedRef = useRef(false)
+  const transitionRef = useRef<{ forId: string; fromId: string | null; live: boolean } | null>(null)
 
   if (latestId && transitionRef.current?.forId !== latestId) {
-    transitionRef.current = { forId: latestId, fromId: shownRef.current }
+    transitionRef.current = { forId: latestId, fromId: shownRef.current, live: mountedRef.current }
   }
+
+  useEffect(() => {
+    mountedRef.current = true
+  }, [])
 
   useEffect(() => {
     if (!latestId) return
@@ -52,5 +60,6 @@ export function useStatusTransition(
   return {
     from: history[fromIndex],
     unseenIds: new Set(history.slice(fromIndex + 1).map((u) => u.id)),
+    live: t.live,
   }
 }
