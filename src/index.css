@@ -67,8 +67,14 @@ textarea:focus-visible,
 }
 .send-caption { font-size: 13px; color: #666666; }
 
-/* The envelope */
-.env { position: relative; width: 232px; height: 150px; margin-top: 96px; perspective: 700px; }
+/* The envelope. Durations live here and are mirrored by SEND_MS in
+   SendMotion.tsx, which drives the timers. Change them together. */
+.env {
+  --send-fold: 2000ms;
+  --send-leave: 950ms;
+  --send-unfold: 900ms;
+  position: relative; width: 232px; height: 150px; margin-top: 96px; perspective: 700px;
+}
 .env__back {
   position: absolute; inset: 0; border-radius: 10px;
   background: #e9e5df; border: 1px solid rgba(0, 0, 0, 0.06);
@@ -102,16 +108,16 @@ textarea:focus-visible,
 }
 
 .env[data-phase='fold'] .env__back,
-.env[data-phase='fold'] .env__front { animation: env-form 1500ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
-.env[data-phase='fold'] .env__letter { animation: env-letter-in 1500ms cubic-bezier(0.5, 0, 0.2, 1) both; }
-.env[data-phase='fold'] .env__flap { animation: env-flap-close 1500ms cubic-bezier(0.4, 0, 0.2, 1) both; }
-.env[data-phase='fold'] .env__seal { animation: env-seal-in 1500ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
-.env[data-phase='leave'] { animation: env-leave 720ms linear both; }
-.env[data-phase='unfold'] .env__seal { animation: env-seal-out 760ms ease-in both; }
-.env[data-phase='unfold'] .env__flap { animation: env-flap-open 760ms cubic-bezier(0.4, 0, 0.2, 1) both; }
-.env[data-phase='unfold'] .env__letter { animation: env-letter-out 760ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.env[data-phase='fold'] .env__front { animation: env-form var(--send-fold) cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.env[data-phase='fold'] .env__letter { animation: env-letter-in var(--send-fold) cubic-bezier(0.5, 0, 0.2, 1) both; }
+.env[data-phase='fold'] .env__flap { animation: env-flap-close var(--send-fold) cubic-bezier(0.4, 0, 0.2, 1) both; }
+.env[data-phase='fold'] .env__seal { animation: env-seal-in var(--send-fold) cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.env[data-phase='leave'] { animation: env-leave var(--send-leave) linear both; }
+.env[data-phase='unfold'] .env__seal { animation: env-seal-out var(--send-unfold) ease-in both; }
+.env[data-phase='unfold'] .env__flap { animation: env-flap-open var(--send-unfold) cubic-bezier(0.4, 0, 0.2, 1) both; }
+.env[data-phase='unfold'] .env__letter { animation: env-letter-out var(--send-unfold) cubic-bezier(0.2, 0.8, 0.3, 1) both; }
 .env[data-phase='unfold'] .env__back,
-.env[data-phase='unfold'] .env__front { animation: env-unform 760ms ease-out both; }
+.env[data-phase='unfold'] .env__front { animation: env-unform var(--send-unfold) ease-out both; }
 
 /* The envelope forms around the letter, the letter drops in, the flap closes
    (behind the letter while open, in front once it passes upright), the seal. */

@@ -9,9 +9,10 @@ import { Avatar } from './Avatar'
 //   unfold  the save failed, so it opens back up
 export type SendPhase = 'fold' | 'leave' | 'unfold'
 
-// Durations, shared with ComposePage so the timers match the CSS. Unhurried on
-// purpose: sending a referral request is rare, and it should feel considered.
-export const SEND_MS = { fold: 1500, leave: 720, unfold: 760 } as const
+// Durations, shared with ComposePage so the timers match the CSS (the
+// --send-* custom properties on .env). Unhurried on purpose: sending a referral
+// request is rare and it costs something to send, so the seal is worth watching.
+export const SEND_MS = { fold: 2000, leave: 950, unfold: 900 } as const
 
 interface Props {
   phase: SendPhase
