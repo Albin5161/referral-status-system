@@ -304,7 +304,8 @@ function ReferrerActions({
     return (
       <div className="mt-4 rounded-card border border-line bg-surface-hover px-3 py-2.5">
         <p className="text-[13px] text-ink-muted">
-          Nothing more to do here. This request is closed.
+          {/* No permanence wording: whether Withdrawn is final is still open (PRD §7) */}
+          Nothing more to do here.
         </p>
       </div>
     )
