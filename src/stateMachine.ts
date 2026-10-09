@@ -4,7 +4,9 @@ import type { ReferralRequest, ReferralStatus, StatusUpdate } from './types'
 // system-inferred states are reversible; a later human action always overrides them.
 export const ALLOWED_TRANSITIONS: Record<ReferralStatus, ReferralStatus[]> = {
   Pending: ['Considering', 'No Update Received', 'Referred', 'Unable to Refer'],
-  Considering: ['No Update Received', 'Referred', 'Unable to Refer'],
+  // Not 'No Update Received': the referrer did reply, so "No reply yet" would be
+  // untrue here. A departure from PRD §3; the status keeps its last-updated date.
+  Considering: ['Referred', 'Unable to Refer'],
   'No Update Received': ['Considering', 'Referred', 'Unable to Refer'], // reversible by design
   Referred: [], // terminal
   'Unable to Refer': [], // terminal

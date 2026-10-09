@@ -54,7 +54,7 @@ The stored values follow the PRD object model; people see plain labels.
 |--------|----------|-------------|---------|
 | Pending | Sent | System, on creation | Waiting on the referrer |
 | Considering | Looking into it | Referrer | Seen and being worked on; still open |
-| No Update Received | No reply yet | System only | The referrer has been silent; reversible by any later update |
+| No Update Received | No reply yet | System only | The referrer has not answered a Sent request for seven days (a design assumption; the timer is not built, the state is staged). It never replaces Looking into it; reversible by any later update |
 | Referred | Referred | Referrer | Done: the referral was made (final) |
 | Unable to Refer | Can’t refer | Referrer | Done: the referrer can’t refer this time (final) |
 | Withdrawn | Withdrawn | Requester | The requester no longer needs it |
